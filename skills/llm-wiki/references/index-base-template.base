@@ -36,7 +36,8 @@ views:
 
   - type: table
     name: By topic
-    groupBy: formula.topic_primary
+    groupBy:
+      property: formula.topic_primary
     order:
       - note.title
       - note.summary
