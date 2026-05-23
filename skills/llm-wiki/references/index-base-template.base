@@ -38,13 +38,12 @@ views:
     name: By topic
     groupBy:
       property: formula.topic_primary
+      direction: ASC
     order:
       - note.title
       - note.summary
       - note.updated
     sort:
-      - property: formula.topic_primary
-        direction: ASC
       - property: note.title
         direction: ASC
 
