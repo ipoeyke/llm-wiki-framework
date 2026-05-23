@@ -31,15 +31,7 @@ Delegate to its sub-skills explicitly when the relevant artifact is being author
 
 There is no programmatic dependency mechanism. Installation is the user's responsibility — document it in setup, don't try to enforce it.
 
-**Install paths per agent** (kepano/obsidian-skills colocates with this skill):
-
-| Agent | Path |
-|---|---|
-| Claude Code | `~/.claude/skills/` |
-| Cursor | `.cursor/skills/` (per-project) |
-| Codex CLI | `~/.codex/skills/` |
-| OpenCode | `~/.opencode/skills/` |
-| Portable | `.skills/` in any project root |
+Install kepano/obsidian-skills at `~/.claude/skills/` (or wherever your Claude Code skills live) before using this framework.
 
 ## Vault layout
 
@@ -157,15 +149,6 @@ Use only these native Obsidian callout types — no plugins required:
 | `> [!question]` | Open question flagged for future ingestion; also wraps personal-note content |
 | `> [!warning]` | Stale or outdated content flagged by lint |
 | `> [!quote]` | Direct quotes from sources |
-
-## Cross-agent compatibility
-
-This skill and its prompts use no Claude Code-specific syntax. Specifically:
-- No `$ARGUMENTS` (that's a CC slash-command convention; it appears only in the CC plugin wrapper, not here).
-- No assumptions about a particular slash-command surface.
-- File paths are POSIX; the bash init script in the CC plugin is the only POSIX-shell-specific artifact and is optional.
-
-Tested under: Claude Code. Smoke-tested under: Cursor, Codex CLI (skill discoverable at the documented install paths).
 
 ## References & templates
 

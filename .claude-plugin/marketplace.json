@@ -1,12 +1,12 @@
 {
   "name": "llm-wiki-framework",
-  "description": "Obsidian-native LLM Wiki: portable skill core plus an optional Claude Code plugin wrapper.",
+  "description": "Obsidian-native LLM Wiki for Claude Code: init, ingest, sync, query, lint, and weekly digest.",
   "owner": { "name": "ipoeyke" },
   "plugins": [
     {
       "name": "wiki",
-      "source": "./cc-plugin",
-      "description": "Init, ingest, sync, query, lint, and digest an Obsidian LLM wiki. Wraps the llm-wiki skill at ../skills/llm-wiki/.",
+      "source": { "source": "github", "repo": "ipoeyke/llm-wiki-framework" },
+      "description": "Init, ingest, sync, query, lint, and digest an Obsidian LLM wiki.",
       "version": "0.1.0",
       "license": "MIT",
       "keywords": ["obsidian", "wiki", "knowledge-management", "llm"],

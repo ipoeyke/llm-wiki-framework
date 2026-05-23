@@ -55,12 +55,12 @@ fi
 
 # ---------- locate the skill's references directory ----------
 script_dir="$(cd "$(dirname "$0")" && pwd)"
-references_dir="$script_dir/../../skills/llm-wiki/references"
-prompts_dir="$script_dir/../../skills/llm-wiki/prompts"
+references_dir="$script_dir/../skills/llm-wiki/references"
+prompts_dir="$script_dir/../skills/llm-wiki/prompts"
 
 if [[ ! -d "$references_dir" ]]; then
   echo "error: cannot find skill references at $references_dir" >&2
-  echo "expected layout: <repo>/cc-plugin/scripts/init_wiki.sh and <repo>/skills/llm-wiki/references/" >&2
+  echo "expected layout: <repo>/scripts/init_wiki.sh and <repo>/skills/llm-wiki/references/" >&2
   exit 1
 fi
 

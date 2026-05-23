@@ -2,7 +2,7 @@
 
 An Obsidian-native implementation of Karpathy's LLM Wiki pattern: you collect raw sources in an Obsidian vault, an LLM agent compiles and maintains a cross-referenced wiki on top of them. Generalizes across domains (personal research, coursework, internal project knowledge) via a per-vault config file rather than code changes.
 
-Ships as a **portable skill** (agentskills.io standard) plus an **optional Claude Code plugin wrapper** that adds `/wiki:*` slash commands and a deterministic init shortcut.
+Packaged as a Claude Code plugin: a skill plus `/wiki:*` slash commands and a deterministic init shortcut for power users.
 
 The full v1 specification is [`docs/prd.md`](docs/prd.md).
 
@@ -29,7 +29,7 @@ Three flavors, kept deliberately tight:
 
 ### Hard dependency: kepano/obsidian-skills
 
-Install [`kepano/obsidian-skills`](https://github.com/kepano/obsidian-skills) **first**, in the same skills directory you'll install this framework. It provides the four sub-skills this framework delegates to:
+Install [`kepano/obsidian-skills`](https://github.com/kepano/obsidian-skills) **first**, at `~/.claude/skills/`. It provides the four sub-skills this framework delegates to:
 
 - `obsidian-markdown` — wikilinks, callouts, frontmatter, embeds, block references
 - `obsidian-bases` — Bases authoring
@@ -38,29 +38,14 @@ Install [`kepano/obsidian-skills`](https://github.com/kepano/obsidian-skills) **
 
 Without it, Obsidian-flavored output will be malformed.
 
-### Option A: skill only (any agent)
-
-Works in Claude Code, Cursor, Codex CLI, OpenCode, and anywhere else that supports the [agentskills.io](https://agentskills.io) standard.
-
-```sh
-npx add-skill ipoeyke/llm-wiki-framework
-```
-
-Or manually:
-
-```sh
-git clone https://github.com/ipoeyke/llm-wiki-framework.git
-cp -r llm-wiki-framework/skills/llm-wiki ~/.claude/skills/   # or .cursor/skills/, ~/.codex/skills/, etc.
-```
-
-### Option B: Claude Code plugin (skill + slash commands + bash shortcut)
+### Plugin
 
 ```
 /plugin marketplace add ipoeyke/llm-wiki-framework
 /plugin install wiki@llm-wiki-framework
 ```
 
-You get the skill plus `/wiki:init`, `/wiki:ingest`, `/wiki:sync`, `/wiki:query`, `/wiki:lint`, `/wiki:digest`, and the `init_wiki.sh` scaffolding script.
+You get `/wiki:init`, `/wiki:ingest`, `/wiki:sync`, `/wiki:query`, `/wiki:lint`, `/wiki:digest`, and the `init_wiki.sh` scaffolding script.
 
 ## Quickstart
 
@@ -92,19 +77,20 @@ llm-wiki-framework/
 ├── LICENSE                    (MIT)
 ├── docs/
 │   └── prd.md                 (v1 spec — single source of truth)
-├── skills/
-│   └── llm-wiki/              (the portable skill)
-│       ├── SKILL.md
-│       ├── references/        (templates: raw, article, archive, index, digest HTML, flavor presets, Canvas Web Clipper)
-│       └── prompts/           (per-operation prompts; ingest has per-flavor variants)
-├── cc-plugin/                 (Claude Code wrapper)
-│   ├── .claude-plugin/plugin.json
-│   ├── commands/              (6 slash command registrations)
-│   ├── scripts/init_wiki.sh   (bash scaffolding shortcut)
-│   └── README.md
-└── .claude-plugin/
-    └── marketplace.json       (turns this repo into a single-plugin marketplace)
+├── .claude-plugin/
+│   ├── plugin.json            (plugin manifest)
+│   └── marketplace.json       (single-plugin marketplace)
+├── commands/                  (6 slash command registrations)
+├── scripts/
+│   └── init_wiki.sh           (bash scaffolding shortcut)
+└── skills/
+    └── llm-wiki/
+        ├── SKILL.md
+        ├── references/        (templates: raw, article, archive, index, digest HTML, flavor presets, Canvas Web Clipper)
+        └── prompts/           (per-operation prompts; ingest has per-flavor variants)
 ```
+
+A note on the Canvas LMS Web Clipper template at `skills/llm-wiki/references/canvas-web-clipper.json`: it's a best-effort [Obsidian Web Clipper](https://obsidian.md/clipper) template targeting `*.instructure.com/courses/*` URLs. Validate it in the Web Clipper UI on first install — Obsidian Web Clipper's JSON schema isn't publicly documented, so field syntax may need adjustment for your version. The same Web Clipper pattern works for any browser-accessible source behind authentication.
 
 ## Design principles
 

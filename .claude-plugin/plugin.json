@@ -6,6 +6,5 @@
   "author": { "name": "ipoeyke" },
   "repository": "https://github.com/ipoeyke/llm-wiki-framework",
   "license": "MIT",
-  "keywords": ["obsidian", "wiki", "knowledge-management", "llm"],
-  "skills": "../skills/"
+  "keywords": ["obsidian", "wiki", "knowledge-management", "llm"]
 }

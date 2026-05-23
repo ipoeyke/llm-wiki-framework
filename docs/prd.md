@@ -14,7 +14,7 @@ The LLM Wiki Framework is a generalizable, Obsidian-native implementation of Kar
 
 - Be the cleanest **Obsidian-native** LLM Wiki available. Wikilinks, callouts, frontmatter, Bases, and Obsidian Canvas (the `.canvas` visual-map format, not Instructure Canvas LMS) should feel first-class, not bolted on.
 - **Generalize across domains via configuration**, not code. One install. Each vault picks a flavor and customizes its own `wiki.config.md` and prompts.
-- Ship as a **portable skill** (agentskills.io standard) plus an **optional Claude Code plugin wrapper** that adds slash commands and scheduling. Skill core works in CC, Cursor, Codex, OpenCode, etc.
+- Ship as a **native Claude Code plugin** combining a skill, slash commands, and scheduling in one install. (A future refactor could re-introduce portability to other agentskills.io-compatible clients; v1 is CC-only.)
 - **Maintenance is the LLM's job, not the human's.** The human reads, captures, and asks. The LLM compiles, links, lints, syncs, and digests.
 
 ### Non-goals (v1)
@@ -78,7 +78,7 @@ Three layers, all inside a single Obsidian vault.
     └── digest.md
 ```
 
-The skill itself lives outside the vault, in the agent's skill directory (e.g., `~/.claude/skills/llm-wiki/`). Per-vault prompt customization lives inside the vault at `prompts/`.
+The skill itself lives outside the vault, inside the installed plugin (under Claude Code's plugin cache). Per-vault prompt customization lives inside the vault at `prompts/`.
 
 ---
 
@@ -424,90 +424,61 @@ Rationale for de-emphasis: in practice, auto-generated `.canvas` files tend to g
 
 ## 7. Distribution
 
-### Skill core (portable, primary deliverable)
+Ships as a single **native Claude Code plugin** that bundles:
 
-Lives at `skills/llm-wiki/SKILL.md` plus `references/` (templates) and `prompts/` (default flavor prompts). Conforms to the agentskills.io standard.
-
-**Install paths:**
-- Claude Code: `~/.claude/skills/llm-wiki/`
-- Cursor: `.cursor/skills/llm-wiki/`
-- Codex CLI: `~/.codex/skills/llm-wiki/`
-- OpenCode: `~/.opencode/skills/llm-wiki/`
-- Portable: `.skills/llm-wiki/` in any project
-
-**Install methods:**
-- `npx add-skill <owner>/llm-wiki-framework`
-- Manual `git clone` + copy
-
-The skill is self-contained: no bash dependency, no external scripts.
-
-### Claude Code plugin wrapper (optional, secondary deliverable)
-
-A thin wrapper around the skill that adds:
-- **Slash commands:** `/wiki:init`, `/wiki:ingest`, `/wiki:sync`, `/wiki:query`, `/wiki:lint`, `/wiki:digest`
-- **Plugin marketplace install:** `/plugin marketplace add <owner>/llm-wiki-framework` then `/plugin install llm-wiki@llm-wiki-framework`
-- **Routines integration** for scheduled `digest` (default weekly) and `sync` (default daily or on-demand)
-- **`init_wiki.sh`** scaffolding script — same behavior as the skill's Init operation but executable for power users who want one-shot setup from a shell
-
-The plugin **imports** the skill, not forks it. Updates to the skill propagate without re-publishing the plugin.
+- **A skill** at `skills/llm-wiki/` — SKILL.md plus `references/` (templates) and `prompts/` (default flavor prompts). Claude Code auto-discovers it at the plugin root.
+- **Slash commands:** `/wiki:init`, `/wiki:ingest`, `/wiki:sync`, `/wiki:query`, `/wiki:lint`, `/wiki:digest`. Each thin command file in `commands/` delegates to the skill.
+- **Routines integration** for scheduled `digest` (default weekly) and `sync` (default daily or on-demand).
+- **`scripts/init_wiki.sh`** — power-user scaffolding shortcut. Same behavior as the skill's Init operation, but executable from a shell without going through the agentic confirmation flow.
 
 ### Repository layout
 
-The framework is shipped as a **single monorepo**. The skill core and the CC plugin wrapper live in one repo so they version-lock and release together. Recommended structure:
-
 ```
-llm-wiki-framework/                       # the repo
+llm-wiki-framework/                       # the repo is the plugin
 ├── README.md
 ├── LICENSE                               # MIT
-├── skills/
-│   └── llm-wiki/
-│       ├── SKILL.md
-│       ├── references/
-│       │   ├── raw-template.md
-│       │   ├── article-template.md
-│       │   ├── archive-template.md
-│       │   ├── index-template.md
-│       │   ├── index-base-template.base
-│       │   ├── wiki-config-template.md
-│       │   ├── digest-template.html       # HTML template for §5.6
-│       │   ├── canvas-web-clipper.json    # Web Clipper template for Canvas LMS, see §5.2
-│       │   └── flavor-presets/
-│       │       ├── research.md
-│       │       ├── course.md
-│       │       └── domain.md
-│       └── prompts/
-│           ├── ingest.md
-│           ├── sync.md
-│           ├── query.md
-│           ├── lint.md
-│           └── digest.md
-├── cc-plugin/
-│   ├── .claude-plugin/
-│   │   └── plugin.json                   # plugin metadata
-│   ├── commands/                         # slash command definitions
-│   │   ├── wiki-init.md
-│   │   ├── wiki-ingest.md
-│   │   ├── wiki-sync.md
-│   │   ├── wiki-query.md
-│   │   ├── wiki-lint.md
-│   │   └── wiki-digest.md
-│   ├── scripts/
-│   │   └── init_wiki.sh
-│   └── README.md
-└── .claude-plugin/
-    └── marketplace.json                  # turns the repo into a single-plugin marketplace
+├── .claude-plugin/
+│   ├── plugin.json                       # plugin manifest
+│   └── marketplace.json                  # single-plugin marketplace entry
+├── commands/                             # slash command definitions
+│   ├── init.md
+│   ├── ingest.md
+│   ├── sync.md
+│   ├── query.md
+│   ├── lint.md
+│   └── digest.md
+├── scripts/
+│   └── init_wiki.sh
+└── skills/
+    └── llm-wiki/
+        ├── SKILL.md
+        ├── references/
+        │   ├── raw-template.md
+        │   ├── article-template.md
+        │   ├── archive-template.md
+        │   ├── index-template.md
+        │   ├── index-base-template.base
+        │   ├── wiki-config-template.md
+        │   ├── digest-template.html       # HTML template for §5.6
+        │   ├── canvas-web-clipper.json    # Web Clipper template for Canvas LMS, see §5.2
+        │   └── flavor-presets/
+        │       ├── research.md
+        │       ├── course.md
+        │       └── domain.md
+        └── prompts/
+            ├── ingest.md
+            ├── sync.md
+            ├── query.md
+            ├── lint.md
+            └── digest.md
 ```
 
-**Install paths:**
-
-The repo doubles as a Claude Code plugin marketplace (single-plugin), so users install the CC plugin via:
+The repo doubles as a single-plugin Claude Code marketplace. Install via:
 
 ```
 /plugin marketplace add ipoeyke/llm-wiki-framework
-/plugin install llm-wiki@llm-wiki-framework
+/plugin install wiki@llm-wiki-framework
 ```
-
-Skill-only users install via `npx add-skill ipoeyke/llm-wiki-framework` — the agentskills.io tooling discovers the `skills/llm-wiki/` subdirectory automatically.
 
 **Where this lives concretely:** `ipoeyke/llm-wiki-framework` on GitHub. We are **not** recommending contributing this as a plugin to `dair-ai/dair-academy-plugins` for two reasons: (a) this framework is Obsidian-specialized while dair-ai's `wiki-builder` is Obsidian-agnostic, so they coexist rather than compete; (b) self-owned versioning makes release cadence independent of dair-ai's marketplace gating. Open to cross-listing later if there's appetite.
 
@@ -546,7 +517,7 @@ A successful v1 implementation must satisfy:
 8. **Digest** produces a self-contained HTML artifact at `wiki/digests/YYYY-Www-recap.html` referencing only activity from the requested window; never invents activity not in the log. Opens cleanly in a browser with **zero external network requests** (verify via DevTools Network tab). Article links use the `obsidian://` URI scheme to open the corresponding wiki page in Obsidian.
 9. **Same skill + different flavor** produces materially different `wiki.config.md`, prompt sets, and default page types — verifiable by diffing two fresh inits.
 10. **Vault opens correctly in Obsidian:** wikilinks resolve, callouts render, `wiki/index.base` views populate, Obsidian Canvas (`.canvas`) files open.
-11. **The skill runs on at least Claude Code and one other agent** (Cursor or Codex) without modification.
+11. **The plugin installs cleanly via `/plugin install wiki@llm-wiki-framework`** with no manifest validation errors, and all six slash commands appear in the picker.
 12. **kepano/obsidian-skills is invoked** for all OFM, Bases, JSON Canvas (`.canvas`), and Defuddle operations — verifiable from agent traces.
 
 ---
@@ -570,7 +541,7 @@ A successful v1 implementation must satisfy:
 |---|---|---|---|
 | Per-vault config | Yes (`wiki.config.md`) | No | **Yes (`wiki.config.md`)** |
 | Flavors | 7 | 1 | **3 — `research`, `course`, `domain` (deliberately tight; `domain` is the generalist bucket)** |
-| Form factor | CC plugin only | Portable skill only | **Both — skill core + CC plugin wrapper** |
+| Form factor | CC plugin only | Portable skill only | **CC plugin (v1; future refactor could re-add portability)** |
 | Multi-wiki | Yes (`WIKI_ROOT`) | No | **No (v1)** |
 | Obsidian-native | No | No | **Yes — kepano/obsidian-skills dependency, OFM, Bases, Obsidian Canvas (`.canvas`)** |
 | Operations | start, ingest, compile, query, lint, restructure, export | Ingest, Query, Lint | **Init, Ingest, Sync, Query, Lint, Digest** |
