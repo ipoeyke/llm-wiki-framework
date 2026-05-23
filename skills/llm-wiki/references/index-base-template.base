@@ -1,0 +1,103 @@
+filters:
+  and:
+    - file.ext == "md"
+    - file.folder.startsWith("wiki/")
+    - file.name != "index"
+    - file.name != "log"
+
+formulas:
+  topic_primary: 'if(topics, topics[0], "uncategorized")'
+
+properties:
+  note.title:
+    displayName: Title
+  note.summary:
+    displayName: Summary
+  note.topics:
+    displayName: Topics
+  note.updated:
+    displayName: Updated
+  note.archived:
+    displayName: Archived
+  formula.topic_primary:
+    displayName: Topic
+
+views:
+  - type: table
+    name: All articles
+    order:
+      - note.title
+      - note.summary
+      - note.topics
+      - note.updated
+    sort:
+      - property: note.updated
+        direction: DESC
+
+  - type: table
+    name: By topic
+    groupBy: formula.topic_primary
+    order:
+      - note.title
+      - note.summary
+      - note.updated
+    sort:
+      - property: formula.topic_primary
+        direction: ASC
+      - property: note.title
+        direction: ASC
+
+  - type: table
+    name: Recently updated
+    order:
+      - note.title
+      - note.summary
+      - note.topics
+      - note.updated
+    sort:
+      - property: note.updated
+        direction: DESC
+    limit: 25
+
+  - type: table
+    name: Archived only
+    filters:
+      and:
+        - note.archived == true
+    order:
+      - note.title
+      - note.summary
+      - note.topics
+      - note.updated
+    sort:
+      - property: note.updated
+        direction: DESC
+
+  - type: table
+    name: Open questions
+    filters:
+      and:
+        - file.content.contains("> [!question]")
+    order:
+      - note.title
+      - note.summary
+      - note.topics
+      - note.updated
+    sort:
+      - property: note.updated
+        direction: DESC
+
+  - type: table
+    name: Orphans
+    filters:
+      and:
+        - file.inlinks.length == 0
+        - note.archived != true
+    order:
+      - note.title
+      - note.summary
+      - note.topics
+      - note.updated
+    sort:
+      - property: note.title
+        direction: ASC

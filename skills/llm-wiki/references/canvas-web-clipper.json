@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "0.1.0",
+  "name": "LLM Wiki — Canvas LMS",
+  "behavior": "create",
+  "noteContentFormat": "{{content}}",
+  "properties": [
+    { "name": "title", "value": "{{title}}", "type": "text" },
+    { "name": "collected", "value": "{{date}}", "type": "date" },
+    { "name": "published", "value": "{{meta:article:published_time|date:'YYYY-MM-DD'|fallback:'Unknown'}}", "type": "text" },
+    { "name": "topics", "value": "[\"{{url|split:'/'|index:5|fallback:'inbox'}}\"]", "type": "multitext" },
+    { "name": "content_type", "value": "{{url|matches:'/pages/':'lecture'|matches:'/assignments/syllabus':'syllabus'|matches:'/assignments/':'assignment'|matches:'/discussion_topics/':'discussion'|matches:'/announcements/':'announcement'|fallback:'lecture'}}", "type": "text" },
+    { "name": "source_url", "value": "{{url}}", "type": "text" },
+    { "name": "canvas_course_id", "value": "{{url|split:'/'|index:4}}", "type": "text" }
+  ],
+  "noteNameFormat": "{{date}}-{{title|safe_name|truncate:60}}",
+  "path": "raw/{{url|split:'/'|index:5|fallback:'inbox'}}",
+  "triggers": [
+    "https?://[^/]*\\.instructure\\.com/courses/.*"
+  ],
+  "context": "Save Canvas LMS pages (lectures, assignments, discussions, announcements, syllabi) into the LLM Wiki's raw/ directory. The clip drops into raw/<course-id>/ — relocate manually into a subject-matter topic directory (e.g., raw/cryptography/) during the next /wiki:sync.",
+  "selectorRules": [
+    {
+      "name": "wikiPageBody",
+      "selector": "#wiki_page_show, .show-content, .user_content"
+    },
+    {
+      "name": "discussionBody",
+      "selector": "#discussion_topic .message_wrapper, .discussion-entries"
+    },
+    {
+      "name": "assignmentBody",
+      "selector": "#assignment_show .description, .assignment_description"
+    }
+  ],
+  "_notes_for_first_install": "This template is a best-effort author. Obsidian Web Clipper's full template JSON schema is not publicly documented as of this writing. When you import this into the Web Clipper extension, verify: (1) the URL trigger pattern fires on your Canvas instance, (2) the path resolves to raw/<some-topic>/ as expected (it uses the Canvas course ID as a fallback topic — you'll relocate clips during /wiki:sync), (3) frontmatter property names match the framework's required schema (title, collected, published, topics, content_type, source_url), (4) the body selectors capture the page content and drop Canvas's nav chrome. Field syntax (e.g., {{url|split:'/'|index:5}}) may need adjustment for your Web Clipper version. Once validated, replace this comment with usage notes for your team."
+}
