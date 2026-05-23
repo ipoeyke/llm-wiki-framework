@@ -1,0 +1,126 @@
+# LLM Wiki Framework
+
+An Obsidian-native implementation of Karpathy's LLM Wiki pattern: you collect raw sources in an Obsidian vault, an LLM agent compiles and maintains a cross-referenced wiki on top of them. Generalizes across domains (personal research, coursework, internal project knowledge) via a per-vault config file rather than code changes.
+
+Ships as a **portable skill** (agentskills.io standard) plus an **optional Claude Code plugin wrapper** that adds `/wiki:*` slash commands and a deterministic init shortcut.
+
+The full v1 specification is [`docs/prd.md`](docs/prd.md).
+
+## What you get
+
+Six operations, all running locally:
+
+| Operation | What it does |
+|---|---|
+| **Init** | Scaffold a vault: `raw/`, `wiki/`, `wiki/digests/`, `prompts/`, plus `wiki.config.md` and a Bases-backed index. |
+| **Ingest** | Add a single source (URL, file, pasted text, Web Clipper output, MCP-sourced content) — fetches, normalizes into `raw/<topic>/YYYY-MM-DD-<slug>.md`, then compiles into wiki articles with cascade updates. |
+| **Sync** | Batch-process all new `raw/` sources since the last sync, consolidating cascade updates. |
+| **Query** | Answer from the wiki, grounded in wiki articles (never silently from training priors). Optionally archive the answer as a new article. |
+| **Lint** | Auto-fix deterministic issues (index drift, dead wikilinks with one match, missing frontmatter defaults). Report heuristic findings (contradictions, orphans, thin pages) — never silently rewrite. |
+| **Digest** | Render the period's activity as a self-contained HTML recap with `obsidian://` deep-links back to articles. |
+
+Three flavors, kept deliberately tight:
+
+- **`research`** — personal research wikis (NLP papers, blog posts, etc.). Page types: `concept`, `paper`, `open-question`, `hypothesis`.
+- **`course`** — coursework second brains. Page types: `topic`, `definition`, `worked-example`, `problem-set`. Topics are subject-matter, never weeks or lecture numbers.
+- **`domain`** — generalist bucket for anything else (internal project wikis, hobby knowledge bases, encyclopedic notes). Page types: `concept`, `overview`, `comparison`. Extend in `wiki.config.md`.
+
+## Install
+
+### Hard dependency: kepano/obsidian-skills
+
+Install [`kepano/obsidian-skills`](https://github.com/kepano/obsidian-skills) **first**, in the same skills directory you'll install this framework. It provides the four sub-skills this framework delegates to:
+
+- `obsidian-markdown` — wikilinks, callouts, frontmatter, embeds, block references
+- `obsidian-bases` — Bases authoring
+- `json-canvas` — `.canvas` authoring (on explicit user request only)
+- `defuddle` — clean web extraction during Ingest
+
+Without it, Obsidian-flavored output will be malformed.
+
+### Option A: skill only (any agent)
+
+Works in Claude Code, Cursor, Codex CLI, OpenCode, and anywhere else that supports the [agentskills.io](https://agentskills.io) standard.
+
+```sh
+npx add-skill ipoeyke/llm-wiki-framework
+```
+
+Or manually:
+
+```sh
+git clone https://github.com/ipoeyke/llm-wiki-framework.git
+cp -r llm-wiki-framework/skills/llm-wiki ~/.claude/skills/   # or .cursor/skills/, ~/.codex/skills/, etc.
+```
+
+### Option B: Claude Code plugin (skill + slash commands + bash shortcut)
+
+```
+/plugin marketplace add ipoeyke/llm-wiki-framework
+/plugin install wiki@llm-wiki-framework
+```
+
+You get the skill plus `/wiki:init`, `/wiki:ingest`, `/wiki:sync`, `/wiki:query`, `/wiki:lint`, `/wiki:digest`, and the `init_wiki.sh` scaffolding script.
+
+## Quickstart
+
+```sh
+# 1. cd into the directory you want as your Obsidian vault root
+cd ~/Obsidian/my-wiki
+
+# 2. initialize — either via the agent (asks for audience/purpose interactively)…
+#    /wiki:init course "Information Security"
+#
+#    …or via the bash shortcut (fills audience/purpose with placeholders):
+init_wiki.sh --flavor course --title "Information Security"
+
+# 3. edit wiki.config.md to fill in audience and purpose
+
+# 4. open the directory in Obsidian.app
+
+# 5. ingest your first source
+#    /wiki:ingest https://en.wikipedia.org/wiki/RSA_(cryptosystem)
+#    or use Obsidian Web Clipper to clip LMS pages, then:
+#    /wiki:sync
+```
+
+## Layout
+
+```
+llm-wiki-framework/
+├── README.md                  (this file)
+├── LICENSE                    (MIT)
+├── docs/
+│   └── prd.md                 (v1 spec — single source of truth)
+├── skills/
+│   └── llm-wiki/              (the portable skill)
+│       ├── SKILL.md
+│       ├── references/        (templates: raw, article, archive, index, digest HTML, flavor presets, Canvas Web Clipper)
+│       └── prompts/           (per-operation prompts; ingest has per-flavor variants)
+├── cc-plugin/                 (Claude Code wrapper)
+│   ├── .claude-plugin/plugin.json
+│   ├── commands/              (6 slash command registrations)
+│   ├── scripts/init_wiki.sh   (bash scaffolding shortcut)
+│   └── README.md
+└── .claude-plugin/
+    └── marketplace.json       (turns this repo into a single-plugin marketplace)
+```
+
+## Design principles
+
+- **Local-first.** No telemetry, no cloud sync, no hosted variant. Only URL ingestion touches the network.
+- **`raw/` is immutable.** Source material is never edited in place. Mutable upstream sources (e.g., a Canvas page that gets updated) are handled via a revision protocol (`-revN.md` + `supersedes:`/`superseded_by:` frontmatter pointers), never silent overwrites.
+- **Wikilinks inside `wiki/`, always.** Markdown links only for external URLs.
+- **Subject-matter topics.** `raw/cryptography/`, never `raw/week-2/`. Survives course re-sequencing; lets one wiki article absorb information from many weeks and content types.
+- **Lint discipline.** Deterministic checks auto-fix; heuristic checks report only. The auto-fix list is closed.
+- **Personal notes** (`content_type: personal-note`) surface as `> [!question]` callouts, never as cited claims in article bodies.
+- **Digest HTML is self-contained.** No CDN, no remote fonts, no analytics, no tracking pixels. Article links use the `obsidian://` URI scheme.
+- **Obsidian Canvas (`.canvas`) is supported but de-emphasized.** Generated only on explicit user request — auto-generated canvases tend to go stale.
+
+## Roadmap and non-goals
+
+Out of v1, explicitly: multi-wiki (`WIKI_ROOT`), embedded vector retrieval, journal/CRM modules, a hosted/MCP variant, bundled Canvas LMS API clients, additional flavors beyond the three above. Possible v2 directions are listed in [`docs/prd.md` §10](docs/prd.md).
+
+## License
+
+MIT. See [`LICENSE`](LICENSE).

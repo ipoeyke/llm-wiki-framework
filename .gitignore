@@ -216,3 +216,30 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# ---------------------------------------------------------------------------
+# LLM Wiki Framework
+# ---------------------------------------------------------------------------
+
+# macOS metadata
+.DS_Store
+
+# Node (in case anyone tries to add a build step we don't want)
+node_modules/
+
+# Obsidian per-user/per-machine state (vault config we don't want to track)
+.obsidian/workspace*
+.obsidian/cache
+.obsidian/plugins
+.obsidian/themes
+
+# Editor cruft
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Claude Code per-machine session state
+.claude/
+
