@@ -1,0 +1,11 @@
+{
+  "name": "wiki",
+  "displayName": "LLM Wiki",
+  "version": "0.1.0",
+  "description": "Obsidian-native LLM Wiki: init, ingest, sync, query, lint, weekly digest.",
+  "author": { "name": "ipoeyke" },
+  "repository": "https://github.com/ipoeyke/llm-wiki-framework",
+  "license": "MIT",
+  "keywords": ["obsidian", "wiki", "knowledge-management", "llm"],
+  "skills": "../skills/"
+}
