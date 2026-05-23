@@ -145,6 +145,6 @@ Initialized LLM Wiki vault at $PWD
 
 Next steps:
   1. Open wiki.config.md and fill in <audience> and <purpose>.
-  2. Install kepano/obsidian-skills alongside the llm-wiki skill (required).
+  2. Install kepano/obsidian-skills (required): /plugin marketplace add kepano/obsidian-skills && /plugin install obsidian@obsidian-skills
   3. /wiki:ingest <url>  — add your first source.
 EOF

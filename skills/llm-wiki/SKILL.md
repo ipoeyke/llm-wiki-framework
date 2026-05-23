@@ -31,7 +31,14 @@ Delegate to its sub-skills explicitly when the relevant artifact is being author
 
 There is no programmatic dependency mechanism. Installation is the user's responsibility — document it in setup, don't try to enforce it.
 
-Install kepano/obsidian-skills at `~/.claude/skills/` (or wherever your Claude Code skills live) before using this framework.
+Install via the Claude Code plugin marketplace (recommended):
+
+```
+/plugin marketplace add kepano/obsidian-skills
+/plugin install obsidian@obsidian-skills
+```
+
+Or install manually at `~/.claude/skills/` (or wherever your Claude Code skills live) before using this framework.
 
 ## Vault layout
 

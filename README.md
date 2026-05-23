@@ -29,7 +29,7 @@ Three flavors, kept deliberately tight:
 
 ### Hard dependency: kepano/obsidian-skills
 
-Install [`kepano/obsidian-skills`](https://github.com/kepano/obsidian-skills) **first**, at `~/.claude/skills/`. It provides the four sub-skills this framework delegates to:
+Install [`kepano/obsidian-skills`](https://github.com/kepano/obsidian-skills) **first** — it provides the four sub-skills this framework delegates to:
 
 - `obsidian-markdown` — wikilinks, callouts, frontmatter, embeds, block references
 - `obsidian-bases` — Bases authoring
@@ -37,6 +37,15 @@ Install [`kepano/obsidian-skills`](https://github.com/kepano/obsidian-skills) **
 - `defuddle` — clean web extraction during Ingest
 
 Without it, Obsidian-flavored output will be malformed.
+
+Recommended (Claude Code plugin):
+
+```
+/plugin marketplace add kepano/obsidian-skills
+/plugin install obsidian@obsidian-skills
+```
+
+Or install manually into `~/.claude/skills/` (or wherever your Claude Code skills live).
 
 ### Plugin
 
