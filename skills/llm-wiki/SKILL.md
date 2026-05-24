@@ -2,6 +2,7 @@
 name: llm-wiki
 description: Maintains a compounding, cross-referenced Obsidian wiki on top of a raw/ source archive. Use when the user wants to initialize a wiki vault, ingest sources, sync clippings, query their wiki, lint it, or produce a weekly digest. Triggers on phrases like "initialize this vault as a wiki", "ingest this URL", "what do I know about X from my wiki", "lint the wiki", "weekly digest".
 license: MIT
+disable-model-invocation: true
 metadata:
   version: 0.1.0
 ---
