@@ -10,7 +10,7 @@ Six operations, all running locally:
 
 | Operation | What it does |
 |---|---|
-| **Init** | Scaffold a vault: `raw/`, `wiki/`, `wiki/digests/`, `prompts/`, plus `wiki.config.md`, a Bases-backed index, and Obsidian defaults so only compiled wiki articles appear in the graph view (sources, prompts, config, index, log are all excluded). |
+| **Init** | Scaffold a vault: `raw/`, `wiki/`, `digests/`, `prompts/`, plus `wiki.config.md`, a Bases-backed index, and Obsidian defaults so only compiled wiki articles appear in the graph view (sources, prompts, digests, config, index, log, and `.base` files are all excluded). |
 | **Ingest** | Add a single source (URL, file, pasted text, Web Clipper output, MCP-sourced content) — fetches, normalizes into `raw/<topic>/YYYY-MM-DD-<slug>.md`, then compiles into wiki articles with cascade updates. |
 | **Sync** | Batch-process all new `raw/` sources since the last sync, consolidating cascade updates. |
 | **Query** | Answer from the wiki, grounded in wiki articles (never silently from training priors). Optionally archive the answer as a new article. |

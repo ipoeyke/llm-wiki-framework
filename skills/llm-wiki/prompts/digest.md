@@ -23,7 +23,7 @@ If the window contains **no** `wiki/log.md` activity (no ingests, no syncs, no a
 
 > No wiki activity for {{window}}. Skipping digest. Run with `--force` to produce an empty recap.
 
-This prevents `wiki/digests/` from accumulating boilerplate during midterm weeks or vacation periods.
+This prevents `digests/` from accumulating boilerplate during midterm weeks or vacation periods.
 
 ## Behavior
 
@@ -37,7 +37,7 @@ This prevents `wiki/digests/` from accumulating boilerplate during midterm weeks
    - Which open questions were resolved? raised?
    - Which new concepts emerged?
    - Where are the coverage gaps? (concepts mentioned across multiple articles but lacking a dedicated page — same heuristic Lint uses)
-5. **Render `references/digest-template.html`** into `wiki/digests/<filename>.html`, substituting:
+5. **Render `references/digest-template.html`** into `digests/<filename>.html` (at the vault root — digests are presentation artifacts, not wiki corpus), substituting:
    - `{{wiki_title}}` — from `wiki.config.md`
    - `{{period_label}}` — e.g., "Week 21, 2026"
    - `{{date_range}}` — e.g., "May 18 – May 24, 2026"
@@ -52,9 +52,9 @@ This prevents `wiki/digests/` from accumulating boilerplate during midterm weeks
 7. **Verify the output is self-contained.** No `<script src="https://...">`, no `<link href="https://fonts...">`, no analytics tags, no tracking pixels. All CSS is inlined in `<style>`. The template already enforces this — confirm before writing.
 8. **Append a "Digests" section to `wiki/index.md`** if not present, and add an entry:
    ```markdown
-   - [2026-W21 recap](digests/2026-W21-recap.html) — 4 sources, 11 articles touched
+   - [2026-W21 recap](../digests/2026-W21-recap.html) — 4 sources, 11 articles touched
    ```
-   Use a standard Markdown link (not a wikilink) so Obsidian routes the `.html` to the system browser.
+   Use a standard Markdown link (not a wikilink) so Obsidian routes the `.html` to the system browser. The `../` is because `index.md` lives in `wiki/` while digests live at the vault root.
 9. **Log:** `## [YYYY-MM-DD] digest | week N | <filename>`.
 
 ## Verification before reporting done
@@ -66,6 +66,6 @@ Open the produced HTML in a browser and confirm:
 
 ## File-write contract
 
-- **Writes:** one new `wiki/digests/YYYY-Www-recap.html`; `wiki/index.md` (digest entry); `wiki/log.md`.
+- **Writes:** one new `digests/YYYY-Www-recap.html`; `wiki/index.md` (digest entry); `wiki/log.md`.
 - **Never writes:** any `wiki/*.md` article; raw files; `wiki/index.base`; `wiki.config.md`; per-vault `prompts/`.
 - **Never invents:** activity not present in `wiki/log.md` within the window.

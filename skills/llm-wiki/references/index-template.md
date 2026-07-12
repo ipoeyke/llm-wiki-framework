@@ -29,5 +29,5 @@ so Obsidian opens them in the system browser.
 
 Example:
 
-- [2026-W21 recap](digests/2026-W21-recap.html) — 4 sources, 11 articles touched
+- [2026-W21 recap](../digests/2026-W21-recap.html) — 4 sources, 11 articles touched
 -->

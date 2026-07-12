@@ -56,10 +56,10 @@ Or install manually at `~/.claude/skills/` (or wherever your Claude Code skills 
 │   ├── <topic>/
 │   │   ├── <article>.md
 │   │   └── <topic>.base               (optional, per-topic view)
-│   ├── digests/
-│   │   └── YYYY-Www-recap.html
 │   └── canvas/                         (Obsidian Canvas / .canvas files)
 │       └── <topic>-map.canvas         (on explicit request only)
+├── digests/
+│   └── YYYY-Www-recap.html
 └── prompts/
     ├── ingest.md
     ├── sync.md
@@ -90,13 +90,13 @@ Init is a one-time bootstrap, not a recurring operation, so its full agentic flo
 2. If any required field is missing, ask **all of them in a single batched prompt**. Do not ask sequentially.
 3. Echo the final config (flavor, title, audience, purpose, digest cadence) and ask for confirmation before writing.
 4. After confirmation:
-   - Create directories: `raw/`, `wiki/`, `wiki/digests/`, `prompts/`. Touch `.gitkeep` in empty leaves.
+   - Create directories: `raw/`, `wiki/`, `digests/`, `prompts/`. Touch `.gitkeep` in empty leaves.
    - Write `wiki.config.md` from `references/wiki-config-template.md`, substituting placeholders. Inject defaults from `references/flavor-presets/<flavor>.md`.
    - Write `wiki/index.md` from `references/index-template.md` (empty heading shape).
    - Write `wiki/index.base` from `references/index-base-template.base` (six default views — delegate Bases syntax to `obsidian-bases`).
    - Touch `wiki/log.md`.
    - Copy the chosen flavor's ingest prompt to vault: `prompts/ingest/<flavor>.md` → `prompts/ingest.md`. Copy flat `prompts/{sync,query,lint,digest}.md` as-is.
-   - Write `.obsidian/app.json` with `userIgnoreFilters: ["raw/", "prompts/", "wiki.config.md", "wiki/index.md", "wiki/log.md"]` so that only compiled wiki articles appear in Obsidian's graph view and link suggestions — everything else (sources, operation prompts, config, index, log) is plumbing. If `.obsidian/app.json` already exists, merge these entries into any existing `userIgnoreFilters` array instead of overwriting the file — it holds other user settings.
+   - Write `.obsidian/app.json` with `userIgnoreFilters: ["raw/", "prompts/", "digests/", "wiki.config.md", "wiki/index.md", "wiki/log.md", "/\\.base$/"]` so that only compiled wiki articles appear in Obsidian's graph view and link suggestions — everything else (sources, operation prompts, digests, config, index, log, and Bases files) is plumbing. If `.obsidian/app.json` already exists, merge these entries into any existing `userIgnoreFilters` array instead of overwriting the file — it holds other user settings.
    - Append init entry to `wiki/log.md`:
      ```
      ## [YYYY-MM-DD] init | <flavor> | <title>

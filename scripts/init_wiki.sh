@@ -71,8 +71,8 @@ if [[ -f "$PWD/wiki.config.md" ]]; then
 fi
 
 # ---------- create directory tree ----------
-mkdir -p raw wiki wiki/digests prompts
-touch raw/.gitkeep wiki/digests/.gitkeep
+mkdir -p raw wiki digests prompts
+touch raw/.gitkeep digests/.gitkeep
 
 # ---------- write wiki.config.md ----------
 today="$(date +%Y-%m-%d)"
@@ -135,14 +135,16 @@ if [[ ! -f ".obsidian/app.json" ]]; then
   "userIgnoreFilters": [
     "raw/",
     "prompts/",
+    "digests/",
     "wiki.config.md",
     "wiki/index.md",
-    "wiki/log.md"
+    "wiki/log.md",
+    "/\\.base$/"
   ]
 }
 JSON
 else
-  echo "note: .obsidian/app.json already exists — add raw/, prompts/, wiki.config.md, wiki/index.md, wiki/log.md to Settings > Files and links > Excluded files yourself."
+  echo "note: .obsidian/app.json already exists — add raw/, prompts/, digests/, wiki.config.md, wiki/index.md, wiki/log.md, and the regex /\\.base$/ to Settings > Files and links > Excluded files yourself."
 fi
 
 # ---------- copy the chosen flavor's prompts into the vault ----------
