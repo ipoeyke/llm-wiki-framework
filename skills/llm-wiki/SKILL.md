@@ -96,6 +96,7 @@ Init is a one-time bootstrap, not a recurring operation, so its full agentic flo
    - Write `wiki/index.base` from `references/index-base-template.base` (six default views — delegate Bases syntax to `obsidian-bases`).
    - Touch `wiki/log.md`.
    - Copy the chosen flavor's ingest prompt to vault: `prompts/ingest/<flavor>.md` → `prompts/ingest.md`. Copy flat `prompts/{sync,query,lint,digest}.md` as-is.
+   - Write `.obsidian/app.json` with `userIgnoreFilters: ["raw/", "wiki/index.md", "wiki/log.md"]` so raw sources and the index/log plumbing stay out of Obsidian's graph view and link suggestions. If `.obsidian/app.json` already exists, merge these entries into any existing `userIgnoreFilters` array instead of overwriting the file — it holds other user settings.
    - Append init entry to `wiki/log.md`:
      ```
      ## [YYYY-MM-DD] init | <flavor> | <title>

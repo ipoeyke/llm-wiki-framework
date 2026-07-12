@@ -123,6 +123,25 @@ sed "s|{{Wiki title}}|${title}|g" "$references_dir/index-template.md" > wiki/ind
 cp "$references_dir/index-base-template.base" wiki/index.base
 touch wiki/log.md
 
+# ---------- Obsidian defaults: keep plumbing out of the graph ----------
+# raw/ sources, the index, and the log are plumbing, not knowledge; exclude
+# them from graph view / link suggestions via Obsidian's "Excluded files".
+# Only written when app.json doesn't exist yet — never clobber user settings.
+if [[ ! -f ".obsidian/app.json" ]]; then
+  mkdir -p .obsidian
+  cat > .obsidian/app.json <<'JSON'
+{
+  "userIgnoreFilters": [
+    "raw/",
+    "wiki/index.md",
+    "wiki/log.md"
+  ]
+}
+JSON
+else
+  echo "note: .obsidian/app.json already exists — add raw/, wiki/index.md, wiki/log.md to Settings > Files and links > Excluded files yourself."
+fi
+
 # ---------- copy the chosen flavor's prompts into the vault ----------
 cp "$prompts_dir/ingest/${flavor}.md" prompts/ingest.md
 cp "$prompts_dir/sync.md"             prompts/sync.md
