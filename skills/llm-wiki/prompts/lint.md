@@ -30,6 +30,10 @@ These checks have a single objectively correct fix. Apply directly. Each fix is 
    - `summary` missing: leave as `""` and report — don't invent summaries.
    - `updated` missing: fill from the most recent `## [YYYY-MM-DD]` entry in `wiki/log.md` that mentions this article, falling back to filesystem mtime as last resort.
 6. **`wiki/index.base` regeneration.** If the Base file's schema has drifted from current article frontmatter (e.g., a new property is widely adopted), regenerate from `references/index-base-template.base`. Delegate to the `obsidian-bases` sub-skill.
+7. **`open_questions` flag sync.** The `open_questions` frontmatter flag must mirror whether the article body contains at least one `> [!question]` callout (see the universal rule in SKILL.md — Bases cannot filter on body content, so the flag powers the index's "Open questions" view). Both drift directions are deterministic:
+   - Body has a `> [!question]` callout but frontmatter lacks `open_questions: true`: **set it**.
+   - Frontmatter has `open_questions: true` but the body has no `> [!question]` callout: **remove the flag**.
+   - This check reads callouts only — it never adds, removes, or rewrites the `> [!question]` callouts themselves.
 
 **The auto-fix list above is closed.** Do not invent new auto-fixes. Anything not on this list goes in the report-only category below.
 
@@ -57,6 +61,7 @@ A `## Lint report — YYYY-MM-DD` block in conversation:
 - Added missing index entry: [[Article A]]
 - Re-linked dead wikilink in [[Article B]]: `[[Old Name]]` → `[[New Name]]`
 - Filled missing `updated` on [[Article C]] from log
+- Set `open_questions: true` on [[Article H]] (body has a `> [!question]` callout, flag was missing)
 
 ### Reported — needs your call (M)
 - **Possible contradiction**: [[Article D]] and [[Article E]] disagree on <claim>. Sources: [[raw/...]], [[raw/...]]. Suggested: add `> [!conflict]` in [[Article D]].

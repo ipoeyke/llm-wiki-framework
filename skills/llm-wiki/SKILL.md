@@ -144,6 +144,7 @@ These apply to every operation. Do not relax them per-flavor.
 - **Digest HTML is self-contained.** No CDN scripts, no remote fonts, no analytics, no tracking pixels. Vanilla CSS only.
 - **Obsidian Canvas (`.canvas`) files are never auto-generated.** Only on explicit user request.
 - **`raw/` topics ≡ `wiki/` topics.** Reuse rather than fragment. Never create a new topic when an existing one fits.
+- **`open_questions` frontmatter tracks `> [!question]` callouts.** Whenever you write or update an article, set `open_questions: true` if the body contains at least one `> [!question]` callout, and remove the flag (or set `false`) when the last question is resolved. Bases cannot filter on body content, so this flag is what powers the index's "Open questions" view — an article with a question callout but no flag is invisible to it.
 
 ## Callouts (standardized vocabulary)
 

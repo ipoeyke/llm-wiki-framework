@@ -2,22 +2,22 @@ filters:
   and:
     - file.ext == "md"
     - file.folder.startsWith("wiki/")
-    - file.name != "index"
-    - file.name != "log"
+    - file.basename != "index"
+    - file.basename != "log"
 
 formulas:
-  topic_primary: 'if(topics, topics[0], "uncategorized")'
+  topic_primary: if(topics, topics[0], "uncategorized")
 
 properties:
-  note.title:
+  title:
     displayName: Title
-  note.summary:
+  summary:
     displayName: Summary
-  note.topics:
+  topics:
     displayName: Topics
-  note.updated:
+  updated:
     displayName: Updated
-  note.archived:
+  archived:
     displayName: Archived
   formula.topic_primary:
     displayName: Topic
@@ -26,13 +26,10 @@ views:
   - type: table
     name: All articles
     order:
-      - note.title
-      - note.summary
-      - note.topics
-      - note.updated
-    sort:
-      - property: note.updated
-        direction: DESC
+      - title
+      - summary
+      - formula.topic_primary
+      - updated
 
   - type: table
     name: By topic
@@ -40,64 +37,48 @@ views:
       property: formula.topic_primary
       direction: ASC
     order:
-      - note.title
-      - note.summary
-      - note.updated
-    sort:
-      - property: note.title
-        direction: ASC
+      - title
+      - summary
+      - updated
 
   - type: table
     name: Recently updated
-    order:
-      - note.title
-      - note.summary
-      - note.topics
-      - note.updated
-    sort:
-      - property: note.updated
-        direction: DESC
     limit: 25
+    order:
+      - title
+      - summary
+      - formula.topic_primary
+      - updated
 
   - type: table
     name: Archived only
     filters:
       and:
-        - note.archived == true
+        - archived == true
     order:
-      - note.title
-      - note.summary
-      - note.topics
-      - note.updated
-    sort:
-      - property: note.updated
-        direction: DESC
+      - title
+      - summary
+      - updated
 
   - type: table
     name: Open questions
     filters:
       and:
-        - file.content.contains("> [!question]")
+        - open_questions == true
+        - archived != true
     order:
-      - note.title
-      - note.summary
-      - note.topics
-      - note.updated
-    sort:
-      - property: note.updated
-        direction: DESC
+      - title
+      - summary
+      - formula.topic_primary
+      - updated
 
   - type: table
     name: Orphans
     filters:
       and:
-        - file.inlinks.length == 0
-        - note.archived != true
+        - file.backlinks.isEmpty()
+        - archived != true
     order:
-      - note.title
-      - note.summary
-      - note.topics
-      - note.updated
-    sort:
-      - property: note.title
-        direction: ASC
+      - title
+      - formula.topic_primary
+      - updated

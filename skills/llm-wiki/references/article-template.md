@@ -8,6 +8,7 @@ external_sources: "{{Author/org; date; — semicolon-separated, for non-vaulted 
 created: {{YYYY-MM-DD}}
 updated: {{YYYY-MM-DD — knowledge change, not filesystem mtime}}
 archived: false
+open_questions: {{true if body contains any "> [!question]" callout — powers the index's Open questions view; omit otherwise}}
 ---
 
 > [!summary]

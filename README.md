@@ -16,7 +16,7 @@ Six operations, all running locally:
 | **Ingest** | Add a single source (URL, file, pasted text, Web Clipper output, MCP-sourced content) — fetches, normalizes into `raw/<topic>/YYYY-MM-DD-<slug>.md`, then compiles into wiki articles with cascade updates. |
 | **Sync** | Batch-process all new `raw/` sources since the last sync, consolidating cascade updates. |
 | **Query** | Answer from the wiki, grounded in wiki articles (never silently from training priors). Optionally archive the answer as a new article. |
-| **Lint** | Auto-fix deterministic issues (index drift, dead wikilinks with one match, missing frontmatter defaults). Report heuristic findings (contradictions, orphans, thin pages) — never silently rewrite. |
+| **Lint** | Auto-fix deterministic issues (index drift, dead wikilinks with one match, missing frontmatter defaults, `open_questions` flag drift). Report heuristic findings (contradictions, orphans, thin pages) — never silently rewrite. |
 | **Digest** | Render the period's activity as a self-contained HTML recap with `obsidian://` deep-links back to articles. |
 
 Three flavors, kept deliberately tight:
@@ -109,6 +109,7 @@ A note on the Canvas LMS Web Clipper template at `skills/llm-wiki/references/can
 - **Subject-matter topics.** `raw/cryptography/`, never `raw/week-2/`. Survives course re-sequencing; lets one wiki article absorb information from many weeks and content types.
 - **Lint discipline.** Deterministic checks auto-fix; heuristic checks report only. The auto-fix list is closed.
 - **Personal notes** (`content_type: personal-note`) surface as `> [!question]` callouts, never as cited claims in article bodies.
+- **Open questions are queryable.** Any article containing a `> [!question]` callout carries `open_questions: true` frontmatter (Bases can't filter on body content), powering the index's "Open questions" view. Lint keeps flag and callouts in sync deterministically.
 - **Digest HTML is self-contained.** No CDN, no remote fonts, no analytics, no tracking pixels. Article links use the `obsidian://` URI scheme.
 - **Obsidian Canvas (`.canvas`) is supported but de-emphasized.** Generated only on explicit user request — auto-generated canvases tend to go stale.
 
