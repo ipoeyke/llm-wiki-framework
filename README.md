@@ -4,8 +4,6 @@ An Obsidian-native implementation of Karpathy's LLM Wiki pattern: you collect ra
 
 Packaged as a Claude Code plugin: a skill plus `/wiki:*` slash commands and a deterministic init shortcut for power users.
 
-The full v1 specification is [`docs/prd.md`](docs/prd.md).
-
 ## What you get
 
 Six operations, all running locally:
@@ -84,8 +82,6 @@ init_wiki.sh --flavor course --title "Information Security"
 llm-wiki-framework/
 ├── README.md                  (this file)
 ├── LICENSE                    (MIT)
-├── docs/
-│   └── prd.md                 (v1 spec — single source of truth)
 ├── .claude-plugin/
 │   ├── plugin.json            (plugin manifest)
 │   └── marketplace.json       (single-plugin marketplace)
@@ -115,7 +111,7 @@ A note on the Canvas LMS Web Clipper template at `skills/llm-wiki/references/can
 
 ## Roadmap and non-goals
 
-Out of v1, explicitly: multi-wiki (`WIKI_ROOT`), embedded vector retrieval, journal/CRM modules, a hosted/MCP variant, bundled Canvas LMS API clients, additional flavors beyond the three above. Possible v2 directions are listed in [`docs/prd.md` §10](docs/prd.md).
+Out of v1, explicitly: multi-wiki (`WIKI_ROOT`), embedded vector retrieval, journal/CRM modules, a hosted/MCP variant, bundled Canvas LMS API clients, additional flavors beyond the three above.
 
 ## License
 
