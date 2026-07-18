@@ -74,6 +74,24 @@ Per-vault prompts under `prompts/` override the skill's defaults at `prompts/`. 
 
 Six operations. Each has a dedicated prompt file. Read the relevant prompt **before** acting on a trigger.
 
+### Execution: delegate the heavy operations to a subagent
+
+**Ingest, Sync, Lint, and Digest are compile-heavy** — they read many sources (often large PDFs and web pages), write and cascade-update many `wiki/` files, and produce large tool outputs. Running them inline burns the main agent's context on material the user never needs to see. **Do not perform these operations inline. Spawn a subagent (Agent tool, `general-purpose`) to do the work, and relay its compact report.** Run several in parallel (one Agent call per source) when ingesting a batch of independent sources.
+
+- **Delegate:** Ingest, Sync, Lint, Digest.
+- **Keep on the main thread:** Init (interactive — batched question + confirmation before writing) and Query (the answer is the deliverable the user reads now).
+
+When you delegate, give the subagent everything it needs to run autonomously and match the vault, and require it to self-verify and report compactly. The subagent prompt MUST include:
+
+1. **Vault path** and today's date (for `collected`); the source(s) to process.
+2. **Read-first instructions:** `wiki.config.md` (flavor + Custom rules — especially the YAML colon-quoting rule and the flavor's page types), the relevant operation prompt (per-vault `prompts/<op>.md` override wins over the skill default at the same path), and 1-2 existing articles to match voice/structure.
+3. The **binary-source policy** for PDFs/images/audio (store the original + a text sidecar as source of truth, with a `binary:` frontmatter pointer), and the operation's **file-write contract** (what it may and may not touch — never `wiki.config.md`, `index.base`, other `raw/` files, or archived articles).
+4. **Cross-linking + cascade** expectations: link aggressively to existing articles, add reciprocal See-also links and bump `updated:` on cascade-touched pages, update `wiki/index.md`, and append one consolidated `wiki/log.md` entry.
+5. A **self-verification** step before it reports: every `[[wikilink]]` resolves to an existing article title or `raw/` path (0 broken), every new article's frontmatter parses, and each binary source has both its original and sidecar. Fix issues before returning.
+6. A request for a **compact report** (per source: title, topic, article path, one-line thesis, strongest cross-links; plus counts and any failures) — not a file dump.
+
+The main agent stays responsible for the outcome: after the subagent returns, independently spot-check link/YAML integrity before telling the user it is done.
+
 ### Init
 
 Triggers: `/wiki:init`, "initialize this vault as a wiki", "start a new wiki".
@@ -145,6 +163,7 @@ These apply to every operation. Do not relax them per-flavor.
 - **Digest HTML is self-contained.** No CDN scripts, no remote fonts, no analytics, no tracking pixels. Vanilla CSS only.
 - **Obsidian Canvas (`.canvas`) files are never auto-generated.** Only on explicit user request.
 - **`raw/` topics ≡ `wiki/` topics.** Reuse rather than fragment. Never create a new topic when an existing one fits.
+- **Secondary characterizations are claims to verify, not facts to transcribe.** When a `raw/` source carries both primary material and a secondary characterization of it — a quoted blurb, a third-party summary, someone's framing of what a paper or announcement said — treat the secondary as a claim. If it diverges from the primary on a fact or number, prefer the primary and cite the primary's value; render a two-sourced numeric disagreement as `> [!conflict]` and an overstatement, omission, or misframing as `> [!warning]`, attributing each side. Never promote the secondary's number into the article's asserted fact. (A `## Compile hints` discrepancy note in the raw source is a signal to do this, not a substitute for checking.)
 - **`open_questions` frontmatter tracks `> [!question]` callouts.** Whenever you write or update an article, set `open_questions: true` if the body contains at least one `> [!question]` callout, and remove the flag (or set `false`) when the last question is resolved. Bases cannot filter on body content, so this flag is what powers the index's "Open questions" view — an article with a question callout but no flag is invisible to it.
 
 ## Callouts (standardized vocabulary)
