@@ -38,6 +38,11 @@ A single source. Resolve before proceeding:
 
 This step has the flavor-specific behavior. Delegate to the `obsidian-markdown` sub-skill for wikilink, callout, frontmatter, and embed syntax.
 
+0. **Write-time admission.** Before writing, classify the source against the wiki:
+   - **Update-only:** an existing page already covers this subject (same paper, same release, same event). Add the source to that page's `sources` and fold in what is new. No new page.
+   - **Merge-only:** a single-source item with no substance of its own beyond a data point for an existing page. Add a dated subsection to that parent page. No new page.
+   - **New page:** the source is a paper with its own method and results, or introduces an idea no existing page covers.
+   Grep `title:`, `aliases:` and `catalog:` across `wiki/**` and read the one or two relevant `wiki/<topic>/_index.md` files to find the existing page. State the admission decision and its reason in the log entry.
 1. **Decide:** merge into existing article(s), create new article(s), or both. These are not mutually exclusive — one paper often updates a `concept` page AND warrants its own `paper` page.
 2. **Page-type vocabulary** (`research` flavor):
    - `concept` — recurring idea (attention, tokenization, RLHF). Default; built up over many sources.
@@ -49,18 +54,20 @@ This step has the flavor-specific behavior. Delegate to the `obsidian-markdown` 
 5. **Personal-note handling:** if `content_type: personal-note`, the content surfaces only as `> [!question]` callouts in the relevant articles. **Never cite a personal-note as if it were external evidence.**
 6. **Cross-link aggressively.** A single new source typically touches 5–15 pages. Use `[[Article]]`, `[[Article|display text]]`, `[[Article#Heading]]` (delegate to `obsidian-markdown`).
 7. **Conflicts:** if a new claim conflicts with existing wiki content, add a `> [!conflict]` callout attributing both claims to their sources. **Do not silently rewrite.** The conflict stays visible until resolved by a future ingest or explicit user direction.
-8. **Use `references/article-template.md` as the structural template** for new articles.
+8. **Use `references/article-template.md` as the structural template** for new articles, plus the lifecycle fields: `catalog:` (one double-quoted sentence, at most 25 words: what it is and its one distinguishing claim; no title repeat) directly after `summary`, and `status: active`. Leave `review_by` to the script.
+9. **Successor supersession.** If the new page describes the direct successor of an existing page's subject (a new version of the same product, model, spec or standard that replaces it), set `supersedes:` on it, and on the predecessor set `status: superseded`, `superseded_by:` and a one-line `> [!warning] Superseded by [[New]] (YYYY-MM-DD).` at the top of its body. Versions that coexist (different sizes, tiers or product lines) are not successors.
 
 ## Step 3 — Cascade updates
 
 1. Scan same-topic articles for ripple effects: this source might add evidence to, refine, or contradict claims in them.
-2. Scan `wiki/index.md` for related cross-topic articles. A new paper on attention often updates `tokenization/` or `efficiency/` articles too.
+2. Grep article frontmatter (`title:`, `aliases:`, `catalog:`) across `wiki/**` for related cross-topic articles; open a topic's `_index.md` when you need its full list. A new paper on attention often updates `tokenization/` or `efficiency/` articles too.
 3. **Refresh `updated` on every materially-changed article.** Filesystem mtime is not the same — `updated` tracks knowledge change.
-4. **Archive pages (`archived: true`) are NEVER cascade-updated.** They are point-in-time syntheses.
+4. **Archive pages (`archived: true`) are NEVER cascade-updated.** They are point-in-time syntheses. The same holds for `status: superseded` and `status: merged` pages: put new evidence on their `superseded_by` target.
+5. If a touched article's gist changed, rewrite its `catalog:` line.
 
 ## Step 4 — Post-ingest
 
-1. Update `wiki/index.md`: add new articles, refresh summary/updated dates for cascade-updated ones.
+1. Regenerate lifecycle dates and indexes from the vault root: `python3 prompts/tools/wiki_maint.py lifecycle`, then `index`, then `check`. Never hand-edit `wiki/index.md` rows or any `_index.md`. `check` must be clean apart from report-only split candidates.
 2. Update `wiki/index.base` (delegate to the `obsidian-bases` sub-skill). Usually no change unless the schema drifted.
 3. Append to `wiki/log.md`:
    ```
@@ -71,5 +78,5 @@ This step has the flavor-specific behavior. Delegate to the `obsidian-markdown` 
 
 ## File-write contract
 
-- **Writes:** one new `raw/` file (or a `-revN.md`), zero-to-many new `wiki/` articles, updates to existing articles cascade-touched, `wiki/index.md`, `wiki/index.base` (if schema changed), `wiki/log.md`.
-- **Never touches:** `raw/` files other than the one being added; archived articles; `wiki.config.md`; per-vault `prompts/`.
+- **Writes:** one new `raw/` file (or a `-revN.md`), zero-to-many new `wiki/` articles, updates to existing articles cascade-touched, lifecycle frontmatter, a superseded predecessor's status fields and warning line, `wiki/index.md` and `wiki/<topic>/_index.md` (script only), `wiki/index.base` (if schema changed), `wiki/log.md`.
+- **Never touches:** `raw/` files other than the one being added; archived, superseded or merged articles' bodies; `wiki.config.md`; per-vault `prompts/`.

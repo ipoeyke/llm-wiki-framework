@@ -37,6 +37,11 @@ A single source. Resolve before proceeding:
 
 Delegate to the `obsidian-markdown` sub-skill.
 
+0. **Write-time admission.** Before writing, classify the source against the wiki:
+   - **Update-only:** an existing page already covers this subject (same paper, same release, same event). Add the source to that page's `sources` and fold in what is new. No new page.
+   - **Merge-only:** a single-source item with no substance of its own beyond a data point for an existing page. Add a dated subsection to that parent page. No new page.
+   - **New page:** the source introduces a concept, entity or decision no existing page covers, or warrants an overview or comparison page that does not yet exist.
+   Grep `title:`, `aliases:` and `catalog:` across `wiki/**` and read the one or two relevant `wiki/<topic>/_index.md` files to find the existing page. State the admission decision and its reason in the log entry.
 1. **Decide:** merge into existing article(s), create new article(s), or both.
 2. **Page-type vocabulary** (`domain` flavor — deliberately spare; extend in `wiki.config.md`):
    - `concept` — default. A topic, idea, entity, decision, term — anything that earns a page. One concept per page.
@@ -48,18 +53,20 @@ Delegate to the `obsidian-markdown` sub-skill.
 5. **Personal-note handling:** if `content_type: personal-note`, surface only as `> [!question]` callouts. Never cite a personal-note as if it were external evidence.
 6. **Cross-link aggressively.** Even a single source typically updates 3–10 pages.
 7. **Conflicts:** add a `> [!conflict]` callout attributing both claims. Do not silently rewrite.
-8. **Use `references/article-template.md` as the structural template** for new articles.
+8. **Use `references/article-template.md` as the structural template** for new articles, plus the lifecycle fields: `catalog:` (one double-quoted sentence, at most 25 words: what it is and its one distinguishing claim; no title repeat) directly after `summary`, and `status: active`. Leave `review_by` to the script.
+9. **Successor supersession.** If the new page describes the direct successor of an existing page's subject (a new version of the same product, model, spec or standard that replaces it), set `supersedes:` on it, and on the predecessor set `status: superseded`, `superseded_by:` and a one-line `> [!warning] Superseded by [[New]] (YYYY-MM-DD).` at the top of its body. Versions that coexist (different sizes, tiers or product lines) are not successors.
 
 ## Step 3 — Cascade updates
 
 1. Scan same-topic articles for ripple effects.
-2. Scan `wiki/index.md` for related cross-topic articles.
+2. Grep article frontmatter (`title:`, `aliases:`, `catalog:`) across `wiki/**` for related cross-topic articles; open a topic's `_index.md` when you need its full list.
 3. **Refresh `updated` on every materially-changed article.**
-4. **Archive pages (`archived: true`) are never cascade-updated.**
+4. **Archive pages (`archived: true`) are never cascade-updated.** The same holds for `status: superseded` and `status: merged` pages: put new evidence on their `superseded_by` target.
+5. If a touched article's gist changed, rewrite its `catalog:` line.
 
 ## Step 4 — Post-ingest
 
-1. Update `wiki/index.md`.
+1. Regenerate lifecycle dates and indexes from the vault root: `python3 prompts/tools/wiki_maint.py lifecycle`, then `index`, then `check`. Never hand-edit `wiki/index.md` rows or any `_index.md`. `check` must be clean apart from report-only split candidates.
 2. Update `wiki/index.base` (delegate to `obsidian-bases`) if schema drifted.
 3. Append to `wiki/log.md`:
    ```
@@ -69,5 +76,5 @@ Delegate to the `obsidian-markdown` sub-skill.
 
 ## File-write contract
 
-- **Writes:** one new `raw/` file (or `-revN.md`), zero-to-many new `wiki/` articles, updates to cascade-touched articles, `wiki/index.md`, `wiki/index.base` (if schema changed), `wiki/log.md`.
-- **Never touches:** other `raw/` files; archived articles; `wiki.config.md`; per-vault `prompts/`.
+- **Writes:** one new `raw/` file (or `-revN.md`), zero-to-many new `wiki/` articles, updates to cascade-touched articles, lifecycle frontmatter, a superseded predecessor's status fields and warning line, `wiki/index.md` and `wiki/<topic>/_index.md` (script only), `wiki/index.base` (if schema changed), `wiki/log.md`.
+- **Never touches:** other `raw/` files; archived, superseded or merged articles' bodies; `wiki.config.md`; per-vault `prompts/`.

@@ -16,9 +16,13 @@ None.
 
 These checks have a single objectively correct fix. Apply directly. Each fix is logged.
 
-1. **Index consistency.** Every `wiki/*.md` (excluding `index.md` and `log.md`) appears in `wiki/index.md`.
-   - Missing entries: **add** with `(no summary)` placeholder if the article's `summary` frontmatter is empty, otherwise use its `summary`.
-   - Stale entries (index points to nonexistent file): **mark `[MISSING]`** in the index line. **Never delete.** The user decides whether the file was renamed (and the rename should be tracked elsewhere) or genuinely removed.
+1. **Index consistency and lifecycle defaults (scripted).** The index is two-level and generated from frontmatter: `wiki/index.md` lists topics, and `wiki/<topic>/_index.md` lists each topic's active articles. From the vault root run:
+   ```
+   python3 prompts/tools/wiki_maint.py lifecycle
+   python3 prompts/tools/wiki_maint.py index
+   python3 prompts/tools/wiki_maint.py check
+   ```
+   `lifecycle` fills missing `status` defaults and recomputes `review_by` from `updated`; `index` regenerates every index file from current frontmatter, so missing and stale rows cannot persist; `check` lists what remains. Log the number of files each command changed. Never hand-edit index rows. Articles are every `wiki/**/*.md` except `index.md`, `log.md` and `_index.md`.
 2. **Internal links (wikilinks).** Every wikilink in article bodies and frontmatter resolves to an existing file.
    - Dead wikilinks: search the vault for a matching basename (case-insensitive, allowing for known synonyms in `wiki.config.md` if present).
      - **Exactly one match:** auto-relink.
@@ -49,6 +53,10 @@ These checks are judgment calls. Surface findings in a Markdown report so the us
 - **Concepts frequently mentioned but lacking a dedicated page** — a candidate "should-be-a-page" list. Threshold heuristic.
 - **Archive pages whose cited articles have changed substantially since archival** — the archive may have drifted from current wiki state. Surface; let the user decide whether to re-archive.
 - **Thin pages** — articles below a word-count floor (default 80 words) or single-source. Often a sign of premature page creation.
+- **Missing or overlong `catalog`**: listed by `wiki_maint.py check`. Report; don't invent catalog lines in lint (sync and ingest author them).
+- **Hub pages over the size cap**: `check` lines ending "split candidate". Report; splits happen only in the consolidation pass after approval.
+- **Past `review_by`**: run `python3 prompts/tools/wiki_maint.py candidates` and report the counts of demotion candidates and overdue pages. Never demote, merge or supersede from lint.
+- **Consolidation due**: run `python3 prompts/tools/wiki_maint.py due` and report its line when it says `DUE`.
 
 ## Output
 
@@ -77,5 +85,5 @@ A `## Lint report — YYYY-MM-DD` block in conversation:
 
 ## File-write contract
 
-- **Writes:** existing `wiki/*.md` articles that needed deterministic fixes (frontmatter fills, dead-link relinking, see-also pruning); `wiki/index.md` (index consistency fixes); `wiki/index.base` (if regenerated); `wiki/log.md`.
-- **Never writes:** new articles; raw files; article body content based on heuristic findings; `wiki.config.md`; per-vault `prompts/`.
+- **Writes:** existing `wiki/*.md` articles that needed deterministic fixes (frontmatter fills including `status` and `review_by` defaults, dead-link relinking, see-also pruning); `wiki/index.md` and `wiki/<topic>/_index.md` (script only); `wiki/index.base` (if regenerated); `wiki/log.md`.
+- **Never writes:** new articles; raw files; article body content based on heuristic findings; `catalog` lines; lifecycle status changes (`superseded`, `merged`); `wiki.config.md`; per-vault `prompts/`.

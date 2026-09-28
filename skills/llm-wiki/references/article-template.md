@@ -1,6 +1,7 @@
 ---
 title: {{Article title}}
-summary: {{One-line summary. Also surfaces in wiki/index.md.}}
+summary: {{One-line summary.}}
+catalog: "{{One sentence, at most 25 words: what it is and its one distinguishing claim. This is the article's row in wiki/<topic>/_index.md. Do not repeat the title.}}"
 topics: [{{topic}}]
 sources:
   - "[[raw/<topic>/<source-file>.md]]"
@@ -8,6 +9,9 @@ external_sources: "{{Author/org; date; — semicolon-separated, for non-vaulted 
 created: {{YYYY-MM-DD}}
 updated: {{YYYY-MM-DD — knowledge change, not filesystem mtime}}
 archived: false
+status: active
+# review_by: set by prompts/tools/wiki_maint.py lifecycle; do not hand-compute
+# supersedes / superseded_by: "[[Page]]" when this page replaces, or is replaced by, another
 open_questions: {{true if body contains any "> [!question]" callout — powers the index's Open questions view; omit otherwise}}
 ---
 

@@ -136,15 +136,17 @@ if [[ ! -f ".obsidian/app.json" ]]; then
     "raw/",
     "prompts/",
     "digests/",
+    "reports/",
     "wiki.config.md",
     "wiki/index.md",
     "wiki/log.md",
-    "/\\.base$/"
+    "/\\.base$/",
+    "/_index\\.md$/"
   ]
 }
 JSON
 else
-  echo "note: .obsidian/app.json already exists — add raw/, prompts/, digests/, wiki.config.md, wiki/index.md, wiki/log.md, and the regex /\\.base$/ to Settings > Files and links > Excluded files yourself."
+  echo "note: .obsidian/app.json already exists — add raw/, prompts/, digests/, reports/, wiki.config.md, wiki/index.md, wiki/log.md, and the regexes /\\.base$/ and /_index\\.md$/ to Settings > Files and links > Excluded files yourself."
 fi
 
 # ---------- copy the chosen flavor's prompts into the vault ----------
@@ -153,6 +155,11 @@ cp "$prompts_dir/sync.md"             prompts/sync.md
 cp "$prompts_dir/query.md"            prompts/query.md
 cp "$prompts_dir/lint.md"             prompts/lint.md
 cp "$prompts_dir/digest.md"           prompts/digest.md
+cp "$prompts_dir/consolidate.md"      prompts/consolidate.md
+
+# ---------- install the maintenance script ----------
+mkdir -p prompts/tools
+cp "$script_dir/../skills/llm-wiki/scripts/wiki_maint.py" prompts/tools/wiki_maint.py
 
 # ---------- append init entry to wiki/log.md ----------
 {

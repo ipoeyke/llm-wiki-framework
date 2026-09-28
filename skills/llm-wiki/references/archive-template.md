@@ -1,6 +1,7 @@
 ---
 title: "{{Archived: query or synthesis title}}"
 summary: {{One-line summary of what this archived synthesis answers.}}
+catalog: "{{One sentence, at most 25 words, naming the question this synthesis answers.}}"
 topics: [{{primary-topic}}]
 sources:
   - "[[{{Wiki Article A}}]]"
@@ -9,6 +10,7 @@ external_sources: ""
 created: {{YYYY-MM-DD}}
 updated: {{YYYY-MM-DD}}
 archived: true
+status: active
 ---
 
 > [!summary]

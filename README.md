@@ -6,7 +6,7 @@ Packaged as a Claude Code plugin: a skill plus `/wiki:*` slash commands and a de
 
 ## What you get
 
-Six operations, all running locally:
+Seven operations, all running locally:
 
 | Operation | What it does |
 |---|---|
@@ -16,6 +16,7 @@ Six operations, all running locally:
 | **Query** | Answer from the wiki, grounded in wiki articles (never silently from training priors). Optionally archive the answer as a new article. |
 | **Lint** | Auto-fix deterministic issues (index drift, dead wikilinks with one match, missing frontmatter defaults, `open_questions` flag drift). Report heuristic findings (contradictions, orphans, thin pages) — never silently rewrite. |
 | **Digest** | Render the period's activity as a self-contained HTML recap with `obsidian://` deep-links back to articles. |
+| **Consolidate** | Keep the wiki bounded: propose merges, splits of oversized pages, supersessions and orphan links in a numbered report, then apply only the items you approve. |
 
 Three flavors, kept deliberately tight:
 
@@ -52,7 +53,7 @@ Or install manually into `~/.claude/skills/` (or wherever your Claude Code skill
 /plugin install wiki@llm-wiki-framework
 ```
 
-You get `/wiki:init`, `/wiki:ingest`, `/wiki:sync`, `/wiki:query`, `/wiki:lint`, `/wiki:digest`, and the `init_wiki.sh` scaffolding script.
+You get `/wiki:init`, `/wiki:ingest`, `/wiki:sync`, `/wiki:query`, `/wiki:lint`, `/wiki:digest`, `/wiki:consolidate`, the `init_wiki.sh` scaffolding script, and the `wiki_maint.py` maintenance script (Python 3 with PyYAML).
 
 ## Quickstart
 
@@ -85,12 +86,13 @@ llm-wiki-framework/
 ├── .claude-plugin/
 │   ├── plugin.json            (plugin manifest)
 │   └── marketplace.json       (single-plugin marketplace)
-├── commands/                  (6 slash command registrations)
+├── commands/                  (7 slash command registrations)
 ├── scripts/
 │   └── init_wiki.sh           (bash scaffolding shortcut)
 └── skills/
     └── llm-wiki/
         ├── SKILL.md
+        ├── scripts/           (wiki_maint.py: lifecycle dates, generated indexes, checks, consolidation candidates)
         ├── references/        (templates: raw, article, archive, index, digest HTML, flavor presets, Canvas Web Clipper)
         └── prompts/           (per-operation prompts; ingest has per-flavor variants)
 ```
@@ -106,6 +108,8 @@ A note on the Canvas LMS Web Clipper template at `skills/llm-wiki/references/can
 - **Lint discipline.** Deterministic checks auto-fix; heuristic checks report only. The auto-fix list is closed.
 - **Personal notes** (`content_type: personal-note`) surface as `> [!question]` callouts, never as cited claims in article bodies.
 - **Open questions are queryable.** Any article containing a `> [!question]` callout carries `open_questions: true` frontmatter (Bases can't filter on body content), powering the index's "Open questions" view. Lint keeps flag and callouts in sync deterministically.
+- **Bounded growth without deletion.** Articles carry `catalog`, `status` and `review_by` frontmatter. Pages retire as `superseded` or `merged` instead of being deleted, and default queries read active pages only. Half-lives, the size cap and the consolidation cadence live in the `lifecycle:` block of `wiki.config.md`.
+- **Generated two-level index.** `wiki/index.md` lists topics; `wiki/<topic>/_index.md` lists articles, one catalog line each. Both are regenerated from frontmatter, so queries read a small index and grep frontmatter instead of one ever-growing file.
 - **Digest HTML is self-contained.** No CDN, no remote fonts, no analytics, no tracking pixels. Article links use the `obsidian://` URI scheme.
 - **Obsidian Canvas (`.canvas`) is supported but de-emphasized.** Generated only on explicit user request — auto-generated canvases tend to go stale.
 

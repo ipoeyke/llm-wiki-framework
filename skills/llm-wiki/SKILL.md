@@ -50,43 +50,50 @@ Or install manually at `~/.claude/skills/` (or wherever your Claude Code skills 
 │   └── <topic>/
 │       └── YYYY-MM-DD-source-slug.md
 ├── wiki/
-│   ├── index.md
+│   ├── index.md                        (topic level, script-generated)
 │   ├── index.base
 │   ├── log.md
 │   ├── <topic>/
+│   │   ├── _index.md                   (article level, script-generated)
 │   │   ├── <article>.md
 │   │   └── <topic>.base               (optional, per-topic view)
 │   └── canvas/                         (Obsidian Canvas / .canvas files)
 │       └── <topic>-map.canvas         (on explicit request only)
 ├── digests/
 │   └── YYYY-Www-recap.html
+├── reports/
+│   └── consolidation-YYYY-MM-DD.md     (consolidation proposals)
+├── .query-log.jsonl                    (pages cited per query)
 └── prompts/
     ├── ingest.md
     ├── sync.md
     ├── query.md
     ├── lint.md
-    └── digest.md
+    ├── digest.md
+    ├── consolidate.md
+    └── tools/
+        └── wiki_maint.py               (copied from scripts/ at init)
 ```
 
 Per-vault prompts under `prompts/` override the skill's defaults at `prompts/`. Read both; the vault wins on conflict.
 
 ## Operations
 
-Six operations. Each has a dedicated prompt file. Read the relevant prompt **before** acting on a trigger.
+Seven operations. Each has a dedicated prompt file. Read the relevant prompt **before** acting on a trigger.
 
 ### Execution: delegate the heavy operations to a subagent
 
-**Ingest, Sync, Lint, and Digest are compile-heavy** — they read many sources (often large PDFs and web pages), write and cascade-update many `wiki/` files, and produce large tool outputs. Running them inline burns the main agent's context on material the user never needs to see. **Do not perform these operations inline. Spawn a subagent (Agent tool, `general-purpose`) to do the work, and relay its compact report.** Run several in parallel (one Agent call per source) when ingesting a batch of independent sources.
+**Ingest, Sync, Lint, Digest, and Consolidate are compile-heavy** — they read many sources (often large PDFs and web pages), write and cascade-update many `wiki/` files, and produce large tool outputs. Running them inline burns the main agent's context on material the user never needs to see. **Do not perform these operations inline. Spawn a subagent (Agent tool, `general-purpose`) to do the work, and relay its compact report.** Run several in parallel (one Agent call per source) when ingesting a batch of independent sources.
 
-- **Delegate:** Ingest, Sync, Lint, Digest.
+- **Delegate:** Ingest, Sync, Lint, Digest, Consolidate.
 - **Keep on the main thread:** Init (interactive — batched question + confirmation before writing) and Query (the answer is the deliverable the user reads now).
 
 When you delegate, give the subagent everything it needs to run autonomously and match the vault, and require it to self-verify and report compactly. The subagent prompt MUST include:
 
 1. **Vault path** and today's date (for `collected`); the source(s) to process.
 2. **Read-first instructions:** `wiki.config.md` (flavor + Custom rules — especially the YAML colon-quoting rule and the flavor's page types), the relevant operation prompt (per-vault `prompts/<op>.md` override wins over the skill default at the same path), and 1-2 existing articles to match voice/structure.
-3. The **binary-source policy** for PDFs/images/audio (store the original + a text sidecar as source of truth, with a `binary:` frontmatter pointer), and the operation's **file-write contract** (what it may and may not touch — never `wiki.config.md`, `index.base`, other `raw/` files, or archived articles).
-4. **Cross-linking + cascade** expectations: link aggressively to existing articles, add reciprocal See-also links and bump `updated:` on cascade-touched pages, update `wiki/index.md`, and append one consolidated `wiki/log.md` entry.
+3. The **binary-source policy** for PDFs/images/audio (store the original + a text sidecar as source of truth, with a `binary:` frontmatter pointer), and the operation's **file-write contract** (what it may and may not touch — never `wiki.config.md`, `index.base`, other `raw/` files, or archived, superseded or merged articles).
+4. **Cross-linking + cascade** expectations: link aggressively to existing articles, add reciprocal See-also links and bump `updated:` on cascade-touched pages, write `catalog` and `status` on new articles, regenerate indexes with `prompts/tools/wiki_maint.py lifecycle`, `index` and `check` (never hand-edit index rows), and append one consolidated `wiki/log.md` entry.
 5. A **self-verification** step before it reports: every `[[wikilink]]` resolves to an existing article title or `raw/` path (0 broken), every new article's frontmatter parses, and each binary source has both its original and sidecar. Fix issues before returning.
 6. A request for a **compact report** (per source: title, topic, article path, one-line thesis, strongest cross-links; plus counts and any failures) — not a file dump.
 
@@ -110,11 +117,12 @@ Init is a one-time bootstrap, not a recurring operation, so its full agentic flo
 4. After confirmation:
    - Create directories: `raw/`, `wiki/`, `digests/`, `prompts/`. Touch `.gitkeep` in empty leaves.
    - Write `wiki.config.md` from `references/wiki-config-template.md`, substituting placeholders. Inject defaults from `references/flavor-presets/<flavor>.md`.
-   - Write `wiki/index.md` from `references/index-template.md` (empty heading shape).
-   - Write `wiki/index.base` from `references/index-base-template.base` (six default views — delegate Bases syntax to `obsidian-bases`).
+   - Write `wiki/index.md` from `references/index-template.md` (empty heading shape). From the first compile on, `wiki_maint.py index` regenerates it.
+   - Write `wiki/index.base` from `references/index-base-template.base` (nine default views — delegate Bases syntax to `obsidian-bases`).
    - Touch `wiki/log.md`.
-   - Copy the chosen flavor's ingest prompt to vault: `prompts/ingest/<flavor>.md` → `prompts/ingest.md`. Copy flat `prompts/{sync,query,lint,digest}.md` as-is.
-   - Write `.obsidian/app.json` with `userIgnoreFilters: ["raw/", "prompts/", "digests/", "wiki.config.md", "wiki/index.md", "wiki/log.md", "/\\.base$/"]` so that only compiled wiki articles appear in Obsidian's graph view and link suggestions — everything else (sources, operation prompts, digests, config, index, log, and Bases files) is plumbing. If `.obsidian/app.json` already exists, merge these entries into any existing `userIgnoreFilters` array instead of overwriting the file — it holds other user settings.
+   - Copy the chosen flavor's ingest prompt to vault: `prompts/ingest/<flavor>.md` → `prompts/ingest.md`. Copy flat `prompts/{sync,query,lint,digest,consolidate}.md` as-is.
+   - Copy `scripts/wiki_maint.py` to `prompts/tools/wiki_maint.py`. It needs Python 3 with PyYAML.
+   - Write `.obsidian/app.json` with `userIgnoreFilters: ["raw/", "prompts/", "digests/", "reports/", "wiki.config.md", "wiki/index.md", "wiki/log.md", "/\\.base$/", "/_index\\.md$/"]` so that only compiled wiki articles appear in Obsidian's graph view and link suggestions — everything else (sources, operation prompts, digests, consolidation reports, config, indexes, log, and Bases files) is plumbing. If `.obsidian/app.json` already exists, merge these entries into any existing `userIgnoreFilters` array instead of overwriting the file — it holds other user settings.
    - Append init entry to `wiki/log.md`:
      ```
      ## [YYYY-MM-DD] init | <flavor> | <title>
@@ -150,6 +158,12 @@ Triggers: "weekly digest", "what's new in my wiki", scheduled run (cadence from 
 
 Read `prompts/digest.md`.
 
+### Consolidate
+
+Triggers: `/wiki:consolidate`, "consolidate the wiki", "prune the wiki", a sync or lint report saying a consolidation pass is due; apply phase: "apply consolidation <date> items …".
+
+Read `prompts/consolidate.md`. Report first; apply only the items the user approves by number.
+
 ## Universal rules
 
 These apply to every operation. Do not relax them per-flavor.
@@ -165,6 +179,12 @@ These apply to every operation. Do not relax them per-flavor.
 - **`raw/` topics ≡ `wiki/` topics.** Reuse rather than fragment. Never create a new topic when an existing one fits.
 - **Secondary characterizations are claims to verify, not facts to transcribe.** When a `raw/` source carries both primary material and a secondary characterization of it — a quoted blurb, a third-party summary, someone's framing of what a paper or announcement said — treat the secondary as a claim. If it diverges from the primary on a fact or number, prefer the primary and cite the primary's value; render a two-sourced numeric disagreement as `> [!conflict]` and an overstatement, omission, or misframing as `> [!warning]`, attributing each side. Never promote the secondary's number into the article's asserted fact. (A `## Compile hints` discrepancy note in the raw source is a signal to do this, not a substitute for checking.)
 - **`open_questions` frontmatter tracks `> [!question]` callouts.** Whenever you write or update an article, set `open_questions: true` if the body contains at least one `> [!question]` callout, and remove the flag (or set `false`) when the last question is resolved. Bases cannot filter on body content, so this flag is what powers the index's "Open questions" view — an article with a question callout but no flag is invisible to it.
+- **Lifecycle and growth: retire pages, never delete them.** `raw/` is the retention layer and is never pruned; `wiki/` is the consolidation layer. Policy (half-lives, size cap, cadence) lives in the `lifecycle:` block of `wiki.config.md` frontmatter, with per-flavor defaults in `scripts/wiki_maint.py`.
+  - Every article carries `catalog:` (one double-quoted sentence, at most 25 words; its row text in the topic index), `status:` (`active`, `superseded` or `merged`), and, for types or topics with a half-life, `review_by:` (computed by `wiki_maint.py lifecycle` from `updated`; never hand-computed, and the script never shortens a later hand-set date). Non-active pages carry `superseded_by:`; the newer page carries `supersedes:`.
+  - Superseded and merged pages keep their full body plus one `> [!warning]` line naming the replacement. They are hidden from topic indexes and default queries and are never cascade-updated.
+  - **Write-time admission:** before creating a page, decide new page, update-only or merge-only. No standalone substance means merge into the parent, not a new page.
+  - **Indexes are generated.** `wiki/index.md` (topics, hubs, recent updates) and `wiki/<topic>/_index.md` (one catalog row per active article) come from `wiki_maint.py index`. Only the Digests section of `wiki/index.md` is hand-edited.
+  - **Consolidation is approval-gated.** Merges, splits of pages over the size cap, demotions and supersessions of existing pages happen only through the Consolidate operation: a numbered report first, then only the items the user approves.
 
 ## Callouts (standardized vocabulary)
 
@@ -191,7 +211,7 @@ All under `references/`:
 | `index-template.md` | Structure for `wiki/index.md` |
 | `index-base-template.base` | Default Bases views for `wiki/index.base` |
 | `digest-template.html` | Self-contained HTML template for weekly recaps |
-| `wiki-config-template.md` | `wiki.config.md` skeleton with `{{placeholder}}` slots |
+| `wiki-config-template.md` | `wiki.config.md` skeleton with `{{placeholder}}` slots and the `lifecycle:` policy block |
 | `canvas-web-clipper.json` | Obsidian Web Clipper template for Instructure Canvas LMS (best-effort, validate in Web Clipper UI on first install) |
 | `flavor-presets/research.md` | Page types + style for personal research wikis |
 | `flavor-presets/course.md` | Page types + style for coursework wikis |
@@ -208,7 +228,10 @@ prompts/
 ├── sync.md
 ├── query.md
 ├── lint.md
-└── digest.md
+├── digest.md
+└── consolidate.md
 ```
+
+And the maintenance script at `scripts/wiki_maint.py` (copied into each vault at `prompts/tools/`): `lifecycle`, `index [--check]`, `check`, `candidates [--json]`, `due`, `log-query`, `set-catalog`.
 
 No `init.md` prompt — Init's flow is above, in this file.

@@ -4,6 +4,7 @@ filters:
     - file.folder.startsWith("wiki/")
     - file.basename != "index"
     - file.basename != "log"
+    - file.basename != "_index"
 
 formulas:
   topic_primary: if(topics, topics[0], "uncategorized")
@@ -13,6 +14,14 @@ properties:
     displayName: Title
   summary:
     displayName: Summary
+  catalog:
+    displayName: Catalog
+  status:
+    displayName: Status
+  review_by:
+    displayName: Review by
+  superseded_by:
+    displayName: Superseded by
   topics:
     displayName: Topics
   updated:
@@ -23,6 +32,17 @@ properties:
     displayName: Topic
 
 views:
+  - type: table
+    name: Active
+    filters:
+      and:
+        - status == "active"
+    order:
+      - title
+      - catalog
+      - formula.topic_primary
+      - updated
+      - review_by
   - type: table
     name: All articles
     order:
@@ -80,5 +100,28 @@ views:
         - archived != true
     order:
       - title
+      - formula.topic_primary
+      - updated
+  - type: table
+    name: Review due
+    filters:
+      and:
+        - status == "active"
+        - review_by <= today()
+    order:
+      - title
+      - formula.topic_primary
+      - type
+      - review_by
+      - updated
+  - type: table
+    name: Superseded and merged
+    filters:
+      and:
+        - status != "active"
+    order:
+      - title
+      - status
+      - superseded_by
       - formula.topic_primary
       - updated

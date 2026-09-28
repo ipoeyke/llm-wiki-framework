@@ -40,6 +40,11 @@ A single source. Resolve before proceeding:
 
 Delegate to the `obsidian-markdown` sub-skill for OFM syntax.
 
+0. **Write-time admission.** Before writing, classify the source against the wiki:
+   - **Update-only:** an existing page already covers this subject (same paper, same release, same event). Add the source to that page's `sources` and fold in what is new. No new page.
+   - **Merge-only:** a single-source item with no substance of its own beyond a data point for an existing page. Add a dated subsection to that parent page. No new page.
+   - **New page:** the source introduces a topic, definition, worked example or problem set no existing page covers.
+   Grep `title:`, `aliases:` and `catalog:` across `wiki/**` and read the one or two relevant `wiki/<topic>/_index.md` files to find the existing page. State the admission decision and its reason in the log entry.
 1. **Decide:** merge into existing topic article(s), create new article(s), or both. A lecture on RSA both updates a `topic` page for RSA AND may spawn `definition` and `worked-example` pages.
 2. **Page-type vocabulary** (`course` flavor):
    - `topic` — default. A subject-matter area within the course (e.g., "RSA", "BGP", "Paxos"). Builds up from lectures + readings + your notes.
@@ -52,18 +57,20 @@ Delegate to the `obsidian-markdown` sub-skill for OFM syntax.
 6. **Cross-link aggressively.** A lecture typically touches 3–10 wiki pages: the topic page, prerequisite definitions, prior worked examples that exercise the same concept, related topic pages.
 7. **Worked-example back-links:** each worked-example links to the topic page(s) it exercises. Each topic page maintains a "Worked examples" section linking back.
 8. **Conflicts:** if a new source conflicts with existing wiki content (common when re-watching a lecture clarifies an earlier confusion), add a `> [!conflict]` callout. Do not silently rewrite.
-9. **Use `references/article-template.md` as the structural template** for new articles.
+9. **Use `references/article-template.md` as the structural template** for new articles, plus the lifecycle fields: `catalog:` (one double-quoted sentence, at most 25 words: what it is and its one distinguishing claim; no title repeat) directly after `summary`, and `status: active`. Leave `review_by` to the script.
+10. **Successor supersession.** If the new page describes the direct successor of an existing page's subject (a new version of the same product, model, spec or standard that replaces it), set `supersedes:` on it, and on the predecessor set `status: superseded`, `superseded_by:` and a one-line `> [!warning] Superseded by [[New]] (YYYY-MM-DD).` at the top of its body. Versions that coexist (different sizes, tiers or product lines) are not successors.
 
 ## Step 3 — Cascade updates
 
 1. Scan same-topic articles for ripple effects.
-2. Scan `wiki/index.md` for related cross-topic articles. A `network-security/` reading often updates `cryptography/` articles too.
+2. Grep article frontmatter (`title:`, `aliases:`, `catalog:`) across `wiki/**` for related cross-topic articles; open a topic's `_index.md` when you need its full list. A `network-security/` reading often updates `cryptography/` articles too.
 3. **Refresh `updated` on every materially-changed article.** Knowledge change, not mtime.
-4. **Archive pages (`archived: true`) are never cascade-updated.**
+4. **Archive pages (`archived: true`) are never cascade-updated.** The same holds for `status: superseded` and `status: merged` pages: put new evidence on their `superseded_by` target.
+5. If a touched article's gist changed, rewrite its `catalog:` line.
 
 ## Step 4 — Post-ingest
 
-1. Update `wiki/index.md`: new articles added, summaries/updated refreshed.
+1. Regenerate lifecycle dates and indexes from the vault root: `python3 prompts/tools/wiki_maint.py lifecycle`, then `index`, then `check`. Never hand-edit `wiki/index.md` rows or any `_index.md`. `check` must be clean apart from report-only split candidates.
 2. Update `wiki/index.base` (delegate to `obsidian-bases`) if frontmatter schema drifted.
 3. Append to `wiki/log.md`:
    ```
@@ -73,5 +80,5 @@ Delegate to the `obsidian-markdown` sub-skill for OFM syntax.
 
 ## File-write contract
 
-- **Writes:** one new `raw/` file (or `-revN.md`), zero-to-many new `wiki/` articles, updates to cascade-touched articles, `wiki/index.md`, `wiki/index.base` (if schema changed), `wiki/log.md`.
-- **Never touches:** other `raw/` files; archived articles; `wiki.config.md`; per-vault `prompts/`.
+- **Writes:** one new `raw/` file (or `-revN.md`), zero-to-many new `wiki/` articles, updates to cascade-touched articles, lifecycle frontmatter, a superseded predecessor's status fields and warning line, `wiki/index.md` and `wiki/<topic>/_index.md` (script only), `wiki/index.base` (if schema changed), `wiki/log.md`.
+- **Never touches:** other `raw/` files; archived, superseded or merged articles' bodies; `wiki.config.md`; per-vault `prompts/`.
