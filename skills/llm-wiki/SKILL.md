@@ -62,7 +62,7 @@ Or install manually at `~/.claude/skills/` (or wherever your Claude Code skills 
 ├── digests/
 │   └── YYYY-Www-recap.html
 ├── reports/
-│   └── consolidation-YYYY-MM-DD.md     (consolidation proposals)
+│   └── consolidation-YYYY-MM-DD.md     (record of each consolidation pass)
 ├── .query-log.jsonl                    (pages cited per query)
 └── prompts/
     ├── ingest.md
@@ -93,7 +93,7 @@ When you delegate, give the subagent everything it needs to run autonomously and
 1. **Vault path** and today's date (for `collected`); the source(s) to process.
 2. **Read-first instructions:** `wiki.config.md` (flavor + Custom rules — especially the YAML colon-quoting rule and the flavor's page types), the relevant operation prompt (per-vault `prompts/<op>.md` override wins over the skill default at the same path), and 1-2 existing articles to match voice/structure.
 3. The **binary-source policy** for PDFs/images/audio (store the original + a text sidecar as source of truth, with a `binary:` frontmatter pointer), and the operation's **file-write contract** (what it may and may not touch — never `wiki.config.md`, `index.base`, other `raw/` files, or archived, superseded or merged articles).
-4. **Cross-linking + cascade** expectations: link aggressively to existing articles, add reciprocal See-also links and bump `updated:` on cascade-touched pages, write `catalog` and `status` on new articles, regenerate indexes with `prompts/tools/wiki_maint.py lifecycle`, `index` and `check` (never hand-edit index rows), and append one consolidated `wiki/log.md` entry.
+4. **Cross-linking + cascade** expectations: link aggressively to existing articles, add reciprocal See-also links and bump `updated:` on cascade-touched pages, link the first plain-text mention of each new page in older articles (Sync step 4a, Lint check 9), write `catalog` and `status` on new articles, regenerate indexes with `prompts/tools/wiki_maint.py lifecycle`, `index` and `check` (never hand-edit index rows), and append one consolidated `wiki/log.md` entry.
 5. A **self-verification** step before it reports: every `[[wikilink]]` resolves to an existing article title or `raw/` path (0 broken), every new article's frontmatter parses, and each binary source has both its original and sidecar. Fix issues before returning.
 6. A request for a **compact report** (per source: title, topic, article path, one-line thesis, strongest cross-links; plus counts and any failures) — not a file dump.
 
@@ -160,9 +160,9 @@ Read `prompts/digest.md`.
 
 ### Consolidate
 
-Triggers: `/wiki:consolidate`, "consolidate the wiki", "prune the wiki", a sync or lint report saying a consolidation pass is due; apply phase: "apply consolidation <date> items …".
+Triggers: `/wiki:consolidate`, "consolidate the wiki", "prune the wiki"; Sync starts it when `wiki_maint.py due` says it is due.
 
-Read `prompts/consolidate.md`. Report first; apply only the items the user approves by number.
+Read `prompts/consolidate.md`. The pass runs without user approval: back up, apply the changes the evidence supports, verify, and write a report that records what changed.
 
 ## Universal rules
 
@@ -184,7 +184,7 @@ These apply to every operation. Do not relax them per-flavor.
   - Superseded and merged pages keep their full body plus one `> [!warning]` line naming the replacement. They are hidden from topic indexes and default queries and are never cascade-updated.
   - **Write-time admission:** before creating a page, decide new page, update-only or merge-only. No standalone substance means merge into the parent, not a new page.
   - **Indexes are generated.** `wiki/index.md` (topics, hubs, recent updates) and `wiki/<topic>/_index.md` (one catalog row per active article) come from `wiki_maint.py index`. Only the Digests section of `wiki/index.md` is hand-edited.
-  - **Consolidation is approval-gated.** Merges, splits of pages over the size cap, demotions and supersessions of existing pages happen only through the Consolidate operation: a numbered report first, then only the items the user approves.
+  - **Only Consolidate retires or restructures pages.** Merges, splits of pages over the size cap, demotions and supersessions of existing pages happen only in the Consolidate pass, which runs without user approval, backs up `wiki/` first, and writes a report recording what it changed. Sync and Ingest never retire a page: for a direct successor they leave the predecessor active, link it to the new page, and log a `Supersession candidate:` line for the next pass.
 
 ## Callouts (standardized vocabulary)
 

@@ -55,7 +55,7 @@ This step has the flavor-specific behavior. Delegate to the `obsidian-markdown` 
 6. **Cross-link aggressively.** A single new source typically touches 5–15 pages. Use `[[Article]]`, `[[Article|display text]]`, `[[Article#Heading]]` (delegate to `obsidian-markdown`).
 7. **Conflicts:** if a new claim conflicts with existing wiki content, add a `> [!conflict]` callout attributing both claims to their sources. **Do not silently rewrite.** The conflict stays visible until resolved by a future ingest or explicit user direction.
 8. **Use `references/article-template.md` as the structural template** for new articles, plus the lifecycle fields: `catalog:` (one double-quoted sentence, at most 25 words: what it is and its one distinguishing claim; no title repeat) directly after `summary`, and `status: active`. Leave `review_by` to the script.
-9. **Successor supersession.** If the new page describes the direct successor of an existing page's subject (a new version of the same product, model, spec or standard that replaces it), set `supersedes:` on it, and on the predecessor set `status: superseded`, `superseded_by:` and a one-line `> [!warning] Superseded by [[New]] (YYYY-MM-DD).` at the top of its body. Versions that coexist (different sizes, tiers or product lines) are not successors.
+9. **Successor (no retirement).** If the new page describes the direct successor of an existing page's subject (a new version of the same product, model, spec or standard that replaces it), leave the predecessor `status: active` and write no `supersedes` or `superseded_by`. Cascade a dated successor subsection and link onto the predecessor, and add `Supersession candidate: [[Old]] by [[New]]` to the log entry. Retirement happens only in the consolidation pass. Versions that coexist (different sizes, tiers or product lines) are not successors.
 
 ## Step 3 — Cascade updates
 
@@ -78,5 +78,5 @@ This step has the flavor-specific behavior. Delegate to the `obsidian-markdown` 
 
 ## File-write contract
 
-- **Writes:** one new `raw/` file (or a `-revN.md`), zero-to-many new `wiki/` articles, updates to existing articles cascade-touched, lifecycle frontmatter, a superseded predecessor's status fields and warning line, `wiki/index.md` and `wiki/<topic>/_index.md` (script only), `wiki/index.base` (if schema changed), `wiki/log.md`.
+- **Writes:** one new `raw/` file (or a `-revN.md`), zero-to-many new `wiki/` articles, updates to existing articles cascade-touched, lifecycle frontmatter on new pages, `wiki/index.md` and `wiki/<topic>/_index.md` (script only), `wiki/index.base` (if schema changed), `wiki/log.md`.
 - **Never touches:** `raw/` files other than the one being added; archived, superseded or merged articles' bodies; `wiki.config.md`; per-vault `prompts/`.

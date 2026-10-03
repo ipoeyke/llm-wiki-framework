@@ -38,6 +38,8 @@ These checks have a single objectively correct fix. Apply directly. Each fix is 
    - Body has a `> [!question]` callout but frontmatter lacks `open_questions: true`: **set it**.
    - Frontmatter has `open_questions: true` but the body has no `> [!question]` callout: **remove the flag**.
    - This check reads callouts only — it never adds, removes, or rewrites the `> [!question]` callouts themselves.
+8. **Frontmatter YAML colon quoting.** A top-level scalar line `key: value` whose `value` is unquoted (first non-space char is not `"` `'` `[` `{` `|` `>`) and contains a colon-followed-by-whitespace, or ends in a colon, is invalid YAML — the parser reads the inner colon as a nested mapping key and the whole frontmatter block silently fails to load (breaking index summaries, Bases views, and every other flag). The fix is unambiguous: **wrap the value in double quotes**, escaping any literal `"` as `\"` and any `\` as `\\`. Applies to `summary`, `title`, `external_sources`, and any other string scalar. Does not touch block/flow values (lists, `|`/`>` blocks, already-quoted strings) or a colon with no trailing space (e.g. `L2:Law`, which is valid unquoted). Verify each fixed block re-parses.
+9. **Unlinked mentions of new pages.** For every article whose `created` date falls on or after the date of the previous `lint` entry in `wiki/log.md`, link the **first plain-text mention** of each newly created page in every *other* article that does not already link it. Match the page's title or any `aliases` entry that is at least 4 characters, case-sensitive, as a whole term: not preceded by a letter, digit or hyphen, and not followed by one or by `.digit` (so `Claude Opus 5` never matches inside `Claude Opus 5.5`). Skip frontmatter, headings, fenced code, inline code, existing wikilinks, markdown links, URLs, and `> [!source]` lines. Write `[[Title]]` when the matched text equals the title, else `[[Title|matched text]]`, with the pipe escaped as `\|` inside table rows. One link per new page per article; never rewrite surrounding prose. Refresh `updated` on each touched article (then rerun `wiki_maint.py lifecycle` and `index`), and list every link added in the log entry.
 
 **The auto-fix list above is closed.** Do not invent new auto-fixes. Anything not on this list goes in the report-only category below.
 
@@ -54,7 +56,7 @@ These checks are judgment calls. Surface findings in a Markdown report so the us
 - **Archive pages whose cited articles have changed substantially since archival** — the archive may have drifted from current wiki state. Surface; let the user decide whether to re-archive.
 - **Thin pages** — articles below a word-count floor (default 80 words) or single-source. Often a sign of premature page creation.
 - **Missing or overlong `catalog`**: listed by `wiki_maint.py check`. Report; don't invent catalog lines in lint (sync and ingest author them).
-- **Hub pages over the size cap**: `check` lines ending "split candidate". Report; splits happen only in the consolidation pass after approval.
+- **Hub pages over the size cap**: `check` lines ending "split candidate". Report; splits happen only in the consolidation pass.
 - **Past `review_by`**: run `python3 prompts/tools/wiki_maint.py candidates` and report the counts of demotion candidates and overdue pages. Never demote, merge or supersede from lint.
 - **Consolidation due**: run `python3 prompts/tools/wiki_maint.py due` and report its line when it says `DUE`.
 
@@ -85,5 +87,5 @@ A `## Lint report — YYYY-MM-DD` block in conversation:
 
 ## File-write contract
 
-- **Writes:** existing `wiki/*.md` articles that needed deterministic fixes (frontmatter fills including `status` and `review_by` defaults, dead-link relinking, see-also pruning); `wiki/index.md` and `wiki/<topic>/_index.md` (script only); `wiki/index.base` (if regenerated); `wiki/log.md`.
+- **Writes:** existing `wiki/*.md` articles that needed deterministic fixes (frontmatter fills including `status` and `review_by` defaults, YAML colon quoting, dead-link relinking, see-also pruning, first-mention links to new pages); `wiki/index.md` and `wiki/<topic>/_index.md` (script only); `wiki/index.base` (if regenerated); `wiki/log.md`.
 - **Never writes:** new articles; raw files; article body content based on heuristic findings; `catalog` lines; lifecycle status changes (`superseded`, `merged`); `wiki.config.md`; per-vault `prompts/`.

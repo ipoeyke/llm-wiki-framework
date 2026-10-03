@@ -21,8 +21,9 @@ None. Sync operates on the delta since the last sync.
    - Apply the same `> [!conflict]` discipline, page-type vocabulary, voice, and personal-note handling.
    - **Write-time admission first** (Step 2.0 of the ingest prompt): decide new page, update existing page, or merge-only before writing anything.
    - Every new article gets `catalog:` (one double-quoted sentence, at most 25 words) and `status: active`. Do not write `review_by`; step 5 computes it.
-   - **Successor supersession:** when a new page describes the direct successor of an existing page's subject (a new version of the same product, model, spec or standard that replaces it), set `supersedes:` on the new page, and on the predecessor set `status: superseded`, `superseded_by:`, and a one-line `> [!warning] Superseded by [[New]] (YYYY-MM-DD).` at the top of its body. Record each supersession in the log entry.
+   - **Successor (no retirement):** when a new page describes the direct successor of an existing page's subject (a new version of the same product, model, spec or standard that replaces it), leave the predecessor `status: active` and write no `supersedes` or `superseded_by`. Cascade a dated successor subsection and link onto the predecessor, and add `Supersession candidate: [[Old]] by [[New]]` to the log entry. Retirement happens only in the consolidation pass.
 4. **Batch the cascade updates.** This is why Sync exists separately from Ingest: instead of touching a popular concept page once per source, **consolidate**. Compute the union of cascade-touched articles across all new sources, then write each touched article once with the combined updates. One consolidated walk beats N small ones. Pages with `status: superseded` or `status: merged` are never cascade-updated, same as archived pages; add new evidence to their `superseded_by` target instead. When a touched article's gist changes, rewrite its `catalog:` line too.
+4a. **Backlink new pages in older articles.** After the cascade, link the **first plain-text mention** of each newly created page in every *other* article that does not already link it. Match the page's title or any `aliases` entry that is at least 4 characters, case-sensitive, as a whole term: not preceded by a letter, digit or hyphen, and not followed by one or by `.digit` (so `Claude Opus 5` never matches inside `Claude Opus 5.5`). Skip frontmatter, headings, fenced code, inline code, existing wikilinks, markdown links, URLs, and `> [!source]` lines. Write `[[Title]]` when the matched text equals the title, else `[[Title|matched text]]`, with the pipe escaped as `\|` inside table rows. One link per new page per article; never rewrite surrounding prose. Refresh `updated` on each touched article (step 5 regenerates its index row), and list every link added in the log entry. Merge these edits into the consolidated cascade write when the article is already being touched.
 5. **Regenerate lifecycle dates and indexes with the script, never by hand.** From the vault root run:
    ```
    python3 prompts/tools/wiki_maint.py lifecycle
@@ -36,9 +37,11 @@ None. Sync operates on the delta since the last sync.
    ## [YYYY-MM-DD] sync | N sources processed, M articles updated
    - <primary-article-1>
    - <primary-article-2>
+   Supersession candidate: [[Old]] by [[New]]
    ```
+   Include one `Supersession candidate:` line per successor pair from step 3.
 
-8. **Consolidation reminder.** Run `python3 prompts/tools/wiki_maint.py due`. If it prints `DUE`, end the sync report with one line: "Consolidation pass due: run /wiki:consolidate." Never run the pass from sync. Also mention any page that `check` newly lists over the hub size cap.
+8. **Consolidation.** Run `python3 prompts/tools/wiki_maint.py due`. If it prints `DUE`, after the sync log entry is written, run the consolidation pass (`prompts/consolidate.md`) as a separate subagent, without asking. End the sync report with one line naming its report file. Also mention any page that `check` newly lists over the hub size cap.
 
 ## Idempotency
 
@@ -46,5 +49,5 @@ Sync is safe to run multiple times. The second run finds zero delta (the first r
 
 ## File-write contract
 
-- **Writes:** moves to `raw/` files (only when relocating from `raw/inbox/` or `raw/<course-id>/`); zero-to-many new `wiki/` articles; updates to cascade-touched articles; lifecycle frontmatter (`catalog`, `status`, `review_by`, `supersedes`, `superseded_by`); a superseded predecessor's status fields and warning line; `wiki/index.md` and `wiki/<topic>/_index.md` (script-generated only); `wiki/index.base` (if schema changed); `wiki/log.md`.
-- **Never touches:** raw file *content*; archived, superseded or merged articles' bodies (except the one-line supersession warning); `wiki.config.md`; per-vault `prompts/`; `.query-log.jsonl`.
+- **Writes:** moves to `raw/` files (only when relocating from `raw/inbox/` or `raw/<course-id>/`); zero-to-many new `wiki/` articles; updates to cascade-touched articles; lifecycle frontmatter on new pages (`catalog`, `status: active`, `review_by`); `wiki/index.md` and `wiki/<topic>/_index.md` (script-generated only); `wiki/index.base` (if schema changed); `wiki/log.md`.
+- **Never touches:** raw file *content*; archived, superseded or merged articles' bodies; lifecycle `status`, `supersedes` and `superseded_by` on existing pages; `wiki.config.md`; per-vault `prompts/`; `.query-log.jsonl`.
